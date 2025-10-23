@@ -181,21 +181,44 @@
             min-height: calc(100vh - 70px);
         }
 
-        .content-placeholder {
-            background: white;
-            border-radius: var(--radius);
-            padding: 3rem;
-            box-shadow: var(--shadow);
+        /* Download Section */
+        #download-section {
+            padding: 4rem 0;
             text-align: center;
-            color: var(--text-light);
-            font-size: 1.1rem;
         }
 
-        .content-placeholder i {
-            font-size: 3rem;
-            color: var(--primary);
-            margin-bottom: 1rem;
-            opacity: 0.7;
+        #download-section h2 {
+            font-size: 2.2rem;
+            margin-bottom: 1.5rem;
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        #download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            font-weight: 600;
+            font-size: 1.25rem;
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            text-decoration: none;
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+            transition: all 0.3s ease;
+            animation: pulse 2s infinite;
+        }
+
+        #download-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(16, 185, 129, 0.4);
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 8px 20px rgba(16,185,129,0.3); }
+            50% { box-shadow: 0 8px 30px rgba(16,185,129,0.5); }
+            100% { box-shadow: 0 8px 20px rgba(16,185,129,0.3); }
         }
 
         /* Responsive Design */
@@ -220,8 +243,13 @@
                 padding: 2rem 1rem;
             }
 
-            .content-placeholder {
-                padding: 2rem 1.5rem;
+            #download-section h2 {
+                font-size: 1.8rem;
+            }
+
+            #download-btn {
+                font-size: 1.1rem;
+                padding: 0.9rem 2rem;
             }
         }
 
@@ -230,9 +258,8 @@
                 display: none;
             }
 
-            .content-placeholder {
-                font-size: 1rem;
-                padding: 1.5rem 1rem;
+            #download-section h2 {
+                font-size: 1.6rem;
             }
         }
     </style>
@@ -250,7 +277,7 @@
             <nav>
                 <ul class="nav-menu">
                     <li><a href="#" class="active">Home</a></li>
-                    <li><a href="#">Download</a></li>
+                    <li><a href="#download-section" class="scroll-link">Download</a></li>
                     <li><a href="#">About</a></li>
                     <li><a href="#">Features</a></li>
                     <li><a href="#">Contact</a></li>
@@ -268,22 +295,24 @@
     <div class="mobile-menu" id="mobileMenu">
         <ul>
             <li><a href="#" class="active">Home</a></li>
-            <li><a href="#">Download</a></li>
+            <li><a href="#download-section" class="scroll-link">Download</a></li>
             <li><a href="#">About</a></li>
             <li><a href="#">Features</a></li>
             <li><a href="#">Contact</a></li>
         </ul>
     </div>
 
-    <!-- Main Content Area (Empty for you to fill) -->
+    <!-- Main Content: Download Section -->
     <main>
-        <div class="content-placeholder">
-            <i class="fas fa-edit"></i>
-            <p>Add your content here. This is a clean, modern, and responsive template with a smooth menu system.</p>
-            <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.7;">
-                Fully responsive • Smooth animations • Modern glassmorphism header • Easy to customize
-            </p>
-        </div>
+        <section id="download-section">
+            <h2>Download MCPE latest version for free</h2>
+            <a href="https://mcpedl.org/uploads_files/30-09-2025/minecraft-1-21-111.apk"
+               download
+               id="download-btn">
+                <i class="fas fa-download"></i>
+                Minecraft for free
+            </a>
+        </section>
     </main>
 
     <script>
@@ -321,6 +350,21 @@
                 menuToggle.querySelector('i').classList.replace('fa-times', 'fa-bars');
             }
         });
+
+        // Smooth scroll for menu "Download" link
+        document.querySelectorAll('.scroll-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                target.scrollIntoView({ behavior: 'smooth' });
+
+                // Close mobile menu if open
+                if (mobileMenu.classList.contains('open')) {
+                    mobileMenu.classList.remove('open');
+                    menuToggle.querySelector('i').classList.replace('fa-times', 'fa-bars');
+                }
+            });
+        });
     </script>
 </body>
-  </html>
+    </html>
