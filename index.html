@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Mythic tutorials</title>
+    <title>Mythic Tutorials</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
     <style>
@@ -33,7 +33,6 @@
             min-height: 100vh;
         }
 
-        /* Header & Navigation */
         header {
             position: fixed;
             top: 0;
@@ -70,7 +69,6 @@
             font-size: 1.8rem;
         }
 
-        /* Desktop Menu */
         .nav-menu {
             display: flex;
             gap: 2rem;
@@ -111,7 +109,6 @@
             color: var(--primary);
         }
 
-        /* Mobile Menu Toggle */
         .menu-toggle {
             display: none;
             background: none;
@@ -121,7 +118,6 @@
             cursor: pointer;
         }
 
-        /* Mobile Menu */
         .mobile-menu {
             display: none;
             position: fixed;
@@ -171,7 +167,6 @@
             padding-left: 2rem;
         }
 
-        /* Main Content Area */
         main {
             margin-top: 70px;
             padding: 3rem 1.5rem;
@@ -185,7 +180,6 @@
             margin-bottom: 3rem;
         }
 
-        /* About Section */
         #about-section {
             text-align: center;
             padding: 2rem 0;
@@ -202,13 +196,11 @@
             text-decoration: underline;
         }
 
-        /* Features Section (Placeholder above download) */
         #features-section {
             text-align: center;
             padding: 2rem 0;
         }
 
-        /* Download Section */
         #download-section {
             padding: 4rem 0;
             text-align: center;
@@ -256,7 +248,6 @@
             100% { box-shadow: 0 8px 20px rgba(16,185,129,0.3); }
         }
 
-        /* Contributions Section */
         #contributions-section {
             text-align: center;
             padding: 4rem 0;
@@ -288,13 +279,12 @@
         }
 
         #contributions-section .contributor-insta::before {
-            content: '\f16d'; /* Instagram icon */
+            content: '\f16d';
             font-family: 'Font Awesome 6 Free';
             margin-right: 0.5rem;
-            color: #e1306c; /* Instagram color */
+            color: #e1306c;
         }
 
-        /* Responsive Design */
         @media (max-width: 768px) {
             .nav-menu {
                 display: none;
@@ -346,7 +336,6 @@
     </style>
 </head>
 <body id="top">
-    <!-- Header with Navigation -->
     <header>
         <div class="nav-container">
             <a href="#top" class="logo scroll-link">
@@ -354,7 +343,6 @@
                 <span>MySite</span>
             </a>
 
-            <!-- Desktop Menu -->
             <nav>
                 <ul class="nav-menu">
                     <li><a href="#top" class="scroll-link active">Home</a></li>
@@ -362,17 +350,16 @@
                     <li><a href="#about-section" class="scroll-link">About</a></li>
                     <li><a href="#features-section" class="scroll-link">Features</a></li>
                     <li><a href="#contributions-section" class="scroll-link">Contact</a></li>
+                    <li><a href="/requests.html" target="_blank" rel="noopener">Requests</a></li>
                 </ul>
             </nav>
 
-            <!-- Mobile Menu Toggle -->
             <button class="menu-toggle" aria-label="Toggle menu">
                 <i class="fas fa-bars"></i>
             </button>
         </div>
     </header>
 
-    <!-- Mobile Menu Dropdown -->
     <div class="mobile-menu" id="mobileMenu">
         <ul>
             <li><a href="#top" class="scroll-link active">Home</a></li>
@@ -380,10 +367,10 @@
             <li><a href="#about-section" class="scroll-link">About</a></li>
             <li><a href="#features-section" class="scroll-link">Features</a></li>
             <li><a href="#contributions-section" class="scroll-link">Contact</a></li>
+            <li><a href="/requests.html" target="_blank" rel="noopener">Requests</a></li>
         </ul>
     </div>
 
-    <!-- Main Content -->
     <main>
         <section id="about-section">
             <p>This website is made by <a href="#contributions-section" class="scroll-link">Mythic</a> for tutorials and other things for you users.</p>
@@ -391,7 +378,7 @@
         </section>
 
         <section id="features-section">
-            <!-- Placeholder for features, jumps here just above download -->
+            <!-- Placeholder for features -->
         </section>
 
         <section id="download-section">
@@ -413,7 +400,6 @@
     </main>
 
     <script>
-        // Mobile menu toggle
         const menuToggle = document.querySelector('.menu-toggle');
         const mobileMenu = document.getElementById('mobileMenu');
 
@@ -424,7 +410,6 @@
             icon.classList.toggle('fa-times');
         });
 
-        // Close mobile menu when clicking a link
         document.querySelectorAll('.mobile-menu a').forEach(link => {
             link.addEventListener('click', () => {
                 mobileMenu.classList.remove('open');
@@ -432,7 +417,6 @@
             });
         });
 
-        // Highlight active menu item based on URL (simple version)
         document.querySelectorAll('.nav-menu a, .mobile-menu a').forEach(link => {
             if (link.getAttribute('href') === window.location.pathname.split('/').pop() || 
                 (link.getAttribute('href') === '#top' && window.location.pathname.endsWith('/'))) {
@@ -440,7 +424,6 @@
             }
         });
 
-        // Close mobile menu when clicking outside
         document.addEventListener('click', (e) => {
             if (!menuToggle.contains(e.target) && !mobileMenu.contains(e.target)) {
                 mobileMenu.classList.remove('open');
@@ -448,7 +431,6 @@
             }
         });
 
-        // Smooth scroll for all scroll-links
         document.querySelectorAll('.scroll-link').forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -463,13 +445,11 @@
                     target.scrollIntoView({ behavior: 'smooth' });
                 }
 
-                // Close mobile menu if open
                 if (mobileMenu.classList.contains('open')) {
                     mobileMenu.classList.remove('open');
                     menuToggle.querySelector('i').classList.replace('fa-times', 'fa-bars');
                 }
 
-                // Update active class
                 document.querySelectorAll('.nav-menu a, .mobile-menu a').forEach(l => l.classList.remove('active'));
                 this.classList.add('active');
                 const matchingLinks = document.querySelectorAll(`.scroll-link[href="${href}"]`);
