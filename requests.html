@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Request - MySite</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --radius: 12px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 2rem;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: white;
+            padding: 2rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-size: 2rem;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        label {
+            text-align: left;
+            font-weight: 500;
+            color: var(--text-light);
+        }
+
+        input, textarea {
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 1rem;
+        }
+
+        button:hover {
+            background: color-mix(in srgb, var(--primary) 90%, black);
+            transform: translateY(-2px);
+        }
+
+        .success, .error {
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .success {
+            color: #10b981;
+        }
+
+        .error {
+            color: #ef4444;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-edit"></i> Submit a Request</h1>
+        <p style="color: var(--text-light); margin-bottom: 2rem;">Tell us what tutorial or feature you'd like!</p>
+        
+        <form id="requestForm">
+            <label for="name">Your Name:</label>
+            <input type="text" id="name" name="name" required>
+
+            <label for="email">Email (optional):</label>
+            <input type="email" id="email" name="email">
+
+            <label for="request">Your Request:</label>
+            <textarea id="request" name="request" required placeholder="Describe what you want..."></textarea>
+
+            <button type="submit"><i class="fas fa-paper-plane"></i> Submit Request</button>
+        </form>
+
+        <p class="success" id="successMsg">Thanks! Your request has been sent. We'll review it soon.</p>
+        <p class="error" id="errorMsg">Something went wrong. Please try again.</p>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+        import { getFirestore, collection, addDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDMh5Q7iYpo7Fk979_thXewyfWdDcpDE0Q",
+            authDomain: "user-requests-35ecb.firebaseapp.com",
+            projectId: "user-requests-35ecb",
+            storageBucket: "user-requests-35ecb.firebasestorage.app",
+            messagingSenderId: "1035205130030",
+            appId: "1:1035205130030:web:f6d08b6028e6a3d195acbf"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const form = document.getElementById('requestForm');
+        const successMsg = document.getElementById('successMsg');
+        const errorMsg = document.getElementById('errorMsg');
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const request = document.getElementById('request').value;
+
+            try {
+                await addDoc(collection(db, 'requests'), {
+                    name,
+                    email,
+                    request,
+                    createdAt: new Date()
+                });
+                form.style.display = 'none';
+                successMsg.style.display = 'block';
+                form.reset();
+            } catch (error) {
+                errorMsg.style.display = 'block';
+                setTimeout(() => { errorMsg.style.display = 'none'; }, 3000);
+            }
+        });
+    </script>
+</body>
+  </html>
