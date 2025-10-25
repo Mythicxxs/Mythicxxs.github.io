@@ -108,6 +108,12 @@
             padding: 1.5rem;
             border-radius: 8px;
             border-left: 4px solid var(--primary);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .request-item:hover {
+            background: #f1f5f9;
         }
 
         .request-item h3 {
@@ -119,15 +125,54 @@
             margin-bottom: 0.25rem;
         }
 
-        .logout {
+        .request-item .delete-btn {
             background: var(--danger);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            transition: var(--transition);
+        }
+
+        .request-item .delete-btn:hover {
+            background: color-mix(in srgb, var(--danger) 90%, black);
+        }
+
+        .request-detail {
+            display: none;
+            padding: 2rem;
+        }
+
+        .request-detail h2 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .request-detail p {
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+        }
+
+        .back-btn, .logout {
+            background: var(--primary);
             color: white;
             border: none;
             padding: 0.75rem 1.5rem;
             border-radius: 8px;
             cursor: pointer;
-            margin-top: 2rem;
+            margin-top: 1rem;
             transition: var(--transition);
+        }
+
+        .back-btn:hover, .logout:hover {
+            background: color-mix(in srgb, var(--primary) 90%, black);
+        }
+
+        .logout {
+            background: var(--danger);
+            margin-top: 2rem;
         }
 
         .logout:hover {
@@ -135,7 +180,7 @@
         }
 
         @media (max-width: 768px) {
-            .login-form, .dashboard {
+            .login-form, .dashboard, .request-detail {
                 padding: 2rem 1rem;
             }
         }
@@ -156,14 +201,20 @@
             <div class="request-list" id="requestList">
                 <!-- Requests populated here -->
             </div>
-            <button class="logout" onclick="logout()">Logout</button>
+            <button class="logout" id="logoutBtn">Logout</button>
+        </div>
+
+        <div class="request-detail" id="requestDetail">
+            <h2>Request Details</h2>
+            <div id="detailContent"></div>
+            <button class="back-btn" id="backBtn">Back to Requests</button>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-        import { getAuth, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-        import { getFirestore, collection, getDocs, orderBy, query } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+        import { getAuth, signInWithEmailAndPassword, signOut, setPersistence, browserLocalPersistence, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+        import { getFirestore, collection, getDocs, orderBy, query, deleteDoc, doc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyDMh5Q7iYpo7Fk979_thXewyfWdDcpDE0Q",
@@ -180,9 +231,38 @@
 
         const loginForm = document.getElementById('loginForm');
         const dashboard = document.getElementById('dashboard');
-        const errorMsg = document.getElementById('errorMsg');
         const requestList = document.getElementById('requestList');
+        const errorMsg = document.getElementById('errorMsg');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const requestDetail = document.getElementById('requestDetail');
+        const detailContent = document.getElementById('detailContent');
+        const backBtn = document.getElementById('backBtn');
 
+        // Set authentication persistence to local (stay logged in until explicit logout)
+        setPersistence(auth, browserLocalPersistence)
+            .then(() => {
+                // Check auth state on page load
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        // User is logged in
+                        loginForm.style.display = 'none';
+                        dashboard.style.display = 'block';
+                        requestDetail.style.display = 'none';
+                        populateRequests();
+                    } else {
+                        // User is logged out
+                        loginForm.style.display = 'block';
+                        dashboard.style.display = 'none';
+                        requestDetail.style.display = 'none';
+                        requestList.innerHTML = '';
+                    }
+                });
+            })
+            .catch((error) => {
+                console.error('Error setting persistence:', error);
+            });
+
+        // Handle login
         loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             const email = document.getElementById('email').value;
@@ -192,13 +272,16 @@
                 await signInWithEmailAndPassword(auth, email, password);
                 loginForm.style.display = 'none';
                 dashboard.style.display = 'block';
+                requestDetail.style.display = 'none';
                 await populateRequests();
             } catch (error) {
                 errorMsg.style.display = 'block';
                 setTimeout(() => { errorMsg.style.display = 'none'; }, 3000);
+                console.error('Login error:', error.message);
             }
         });
 
+        // Populate request list
         async function populateRequests() {
             try {
                 const q = query(collection(db, 'requests'), orderBy('createdAt', 'desc'));
@@ -218,22 +301,77 @@
                         <h3>${fields.name || 'Anonymous'} <small style="color: var(--text-light);">${fields.createdAt.toDate().toLocaleDateString()}</small></h3>
                         <p><strong>Email:</strong> ${fields.email || 'Not provided'}</p>
                         <p><strong>Request:</strong> ${fields.request}</p>
+                        <button class="delete-btn" data-id="${doc.id}">Delete</button>
                     `;
+                    item.addEventListener('click', (e) => {
+                        if (e.target.classList.contains('delete-btn')) return; // Ignore delete button clicks
+                        showRequestDetails(doc.id, fields);
+                    });
                     requestList.appendChild(item);
+                });
+
+                // Add delete event listeners
+                document.querySelectorAll('.delete-btn').forEach(button => {
+                    button.addEventListener('click', async (e) => {
+                        const docId = e.target.getAttribute('data-id');
+                        try {
+                            await deleteDoc(doc(db, 'requests', docId));
+                            await populateRequests(); // Refresh list
+                        } catch (error) {
+                            console.error('Error deleting request:', error);
+                        }
+                    });
                 });
             } catch (error) {
                 requestList.innerHTML = '<p>Error loading requests. Please try again.</p>';
+                console.error('Error fetching requests:', error);
             }
         }
 
-        function logout() {
-            signOut(auth).then(() => {
-                loginForm.style.display = 'block';
-                dashboard.style.display = 'none';
-                loginForm.reset();
-                requestList.innerHTML = '';
+        // Show request details
+        function showRequestDetails(docId, fields) {
+            dashboard.style.display = 'none';
+            requestDetail.style.display = 'block';
+            detailContent.innerHTML = `
+                <p><strong>Name:</strong> ${fields.name || 'Anonymous'}</p>
+                <p><strong>Email:</strong> ${fields.email || 'Not provided'}</p>
+                <p><strong>Request:</strong> ${fields.request}</p>
+                <p><strong>Date:</strong> ${fields.createdAt.toDate().toLocaleString()}</p>
+                <button class="delete-btn" data-id="${docId}">Delete</button>
+            `;
+            // Delete button in details view
+            detailContent.querySelector('.delete-btn').addEventListener('click', async () => {
+                try {
+                    await deleteDoc(doc(db, 'requests', docId));
+                    dashboard.style.display = 'block';
+                    requestDetail.style.display = 'none';
+                    await populateRequests();
+                } catch (error) {
+                    console.error('Error deleting request:', error);
+                }
             });
         }
+
+        // Back button
+        backBtn.addEventListener('click', () => {
+            dashboard.style.display = 'block';
+            requestDetail.style.display = 'none';
+            populateRequests();
+        });
+
+        // Logout button
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                loginForm.style.display = 'block';
+                dashboard.style.display = 'none';
+                requestDetail.style.display = 'none';
+                requestList.innerHTML = '';
+                loginForm.reset();
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        });
     </script>
 </body>
-  </html>
+</html>
