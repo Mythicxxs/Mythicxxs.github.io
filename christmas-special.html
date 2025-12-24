@@ -3,123 +3,196 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Santa's Magic Workshop</title>
-    <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <title>Santa's Cheerful Workshop</title>
+    <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:700&family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-red: #d42426;
-            --dark-green: #165b33;
-            --gold: #f8b229;
-            --snow-white: #f8f9fa;
+            --candy-red: #ff3333;
+            --holly-green: #00a86b;
+            --warm-gold: #ffd700;
+            --snow-white: #ffffff;
+            --text-dark: #2c3e50;
         }
 
         body {
             margin: 0;
             padding: 0;
-            background: radial-gradient(circle at center, #1a472a 0%, #072213 100%);
+            /* A bright, happy winter background */
+            background: url('https://img.freepik.com/free-vector/flat-christmas-background_23-2149729368.jpg?w=1380&t=st=1703174400~exp=1703175000~hmac=d8033c2373175411325003116842101137180013805514185712132544555121') no-repeat center center fixed;
+            background-size: cover;
             font-family: 'Poppins', sans-serif;
-            color: white;
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        /* Top Navigation Bar */
+        .top-nav {
+            width: 100%;
+            background: var(--candy-red);
+            padding: 10px 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            position: fixed;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        .main-site-btn {
+            background: var(--snow-white);
+            color: var(--candy-red);
+            text-decoration: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            border: 2px solid var(--snow-white);
+            display: inline-block;
+        }
+
+        .main-site-btn:hover {
+            background: var(--candy-red);
+            color: var(--snow-white);
+            box-shadow: 0 0 10px var(--snow-white);
+        }
+
+        /* Main Content Container */
+        .main-wrapper {
+            padding-top: 80px; /* Space for nav bar */
+            padding-bottom: 40px;
+            width: 100%;
             display: flex;
             justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            text-align: center;
-            padding: 20px 0;
-        }
-
-        /* Snowfall Animation */
-        .snowflake {
-            position: fixed;
-            top: -10px;
-            color: white;
-            font-size: 1em;
-            user-select: none;
-            z-index: 0;
-            animation: fall linear infinite;
-        }
-
-        @keyframes fall {
-            to { transform: translateY(105vh) translateX(20px); }
         }
 
         .container {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.9); /* Bright frosted glass */
+            backdrop-filter: blur(8px);
             padding: 2.5rem;
             border-radius: 25px;
-            border: 2px solid var(--gold);
-            box-shadow: 0 0 40px rgba(0,0,0,0.6);
+            /* Candy cane border effect */
+            border: 4px solid transparent;
+            background-image: linear-gradient(white, white), repeating-linear-gradient(45deg, var(--candy-red) 0px, var(--candy-red) 10px, var(--snow-white) 10px, var(--snow-white) 20px);
+            background-origin: border-box;
+            background-clip: padding-box, border-box;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             width: 90%;
             max-width: 550px;
+            text-align: center;
+            position: relative;
             z-index: 10;
-            margin: auto;
+        }
+
+        /* Decorative Header Icon */
+        .santa-icon {
+            width: 80px;
+            margin-top: -50px;
+            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.2));
         }
 
         h1 {
             font-family: 'Mountains of Christmas', cursive;
-            font-size: 3.5rem;
-            color: var(--gold);
-            margin-bottom: 0.5rem;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            font-size: 3rem;
+            color: var(--candy-red);
+            margin: 0.5rem 0;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .intro-text p {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--holly-green);
         }
 
         #gift-button {
-            background: var(--primary-red);
+            background: linear-gradient(45deg, var(--candy-red), #ff6b6b);
             color: white;
             border: none;
             padding: 18px 45px;
             font-size: 1.3rem;
-            font-weight: bold;
+            font-weight: 800;
             border-radius: 50px;
             cursor: pointer;
-            transition: transform 0.2s, background 0.3s;
-            box-shadow: 0 4px 15px rgba(212, 36, 38, 0.4);
-            margin-top: 10px;
+            transition: transform 0.2s, box-shadow 0.3s;
+            box-shadow: 0 5px 15px rgba(255, 51, 51, 0.4);
+            margin-top: 15px;
+            border: 3px solid white;
         }
 
         #gift-button:hover {
-            transform: scale(1.05);
-            background: #b31d1f;
+            transform: scale(1.05) translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 51, 51, 0.6);
         }
 
-        /* Progress Bar Section */
+        /* Candy Cane Progress Bar */
         #progress-container {
             display: none;
             margin-top: 2rem;
         }
 
         #status-text {
-            font-style: italic;
+            font-weight: 700;
             margin-bottom: 12px;
-            color: var(--gold);
-            font-weight: 600;
+            color: var(--candy-red);
+            font-size: 1.1rem;
         }
 
         .progress-bar-bg {
             width: 100%;
-            height: 24px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 12px;
+            height: 28px;
+            background: #e0e0e0;
+            border-radius: 14px;
             overflow: hidden;
-            border: 1px solid rgba(255,255,255,0.3);
+            border: 2px solid white;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
         }
 
         .progress-bar-fill {
             width: 0%;
             height: 100%;
-            background: linear-gradient(90deg, #ffcf67, #ffffff);
-            box-shadow: 0 0 10px #f8b229;
+            /* Candy stripe animation */
+            background: repeating-linear-gradient(
+                45deg,
+                var(--candy-red),
+                var(--candy-red) 10px,
+                #ff9999 10px,
+                #ff9999 20px
+            );
+            background-size: 28px 28px;
+            animation: move-stripes 1s linear infinite;
+            border-radius: 14px;
+        }
+
+        @keyframes move-stripes {
+            0% { background-position: 0 0; }
+            100% { background-position: 28px 0; }
         }
 
         /* Result Section */
         #result-container {
             display: none;
-            animation: fadeIn 0.8s ease-out;
+            animation: popIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .gift-reveal-header {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--holly-green);
+            margin-bottom: 15px;
+        }
+
+        .gift-image-container {
+            position: relative;
+            display: inline-block;
         }
 
         .gift-image {
@@ -127,110 +200,148 @@
             height: 180px;
             object-fit: contain;
             border-radius: 20px;
-            background: rgba(255,255,255,0.1);
-            padding: 10px;
-            border: 3px solid var(--gold);
-            margin: 20px 0;
+            background: white;
+            padding: 15px;
+            border: 4px solid var(--warm-gold);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
         }
 
         .gift-name {
-            font-size: 1.8rem;
+            font-family: 'Mountains of Christmas', cursive;
+            font-size: 2.2rem;
             font-weight: bold;
-            color: #fff;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            color: var(--candy-red);
+            margin-top: 15px;
         }
 
-        /* Odds Table Styling */
+        /* Odds Table Styling Bright Version */
         .odds-section {
             margin-top: 30px;
-            border-top: 1px solid rgba(255,255,255,0.2);
-            padding-top: 20px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 15px;
+            padding: 15px;
+            border: 2px dashed var(--holly-green);
+        }
+
+        .odds-section h3 {
+             color: var(--text-dark);
+             font-size: 1.1rem;
         }
 
         .odds-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.85rem;
-            color: #eee;
-            margin-top: 10px;
+            font-size: 0.9rem;
+            color: var(--text-dark);
+            margin-top: 15px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
 
         .odds-table th {
-            color: var(--gold);
-            padding-bottom: 8px;
-            border-bottom: 1px solid rgba(248, 178, 41, 0.3);
+            background: var(--holly-green);
+            color: white;
+            padding: 10px;
+            font-weight: 600;
         }
 
         .odds-table td {
-            padding: 6px 4px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding: 8px;
+            border-bottom: 1px solid #eee;
         }
 
-        .tier-bad { color: #ff6b6b; font-weight: bold; }
-        .tier-decent { color: #4dabf7; font-weight: bold; }
-        .tier-good { color: #51cf66; font-weight: bold; }
+        .tier-bad { color: #c0392b; font-weight: 800; background-color: #fadbd8; }
+        .tier-decent { color: #2980b9; font-weight: 800; background-color: #d6eaf8; }
+        .tier-good { color: #27ae60; font-weight: 800; background-color: #d5f5e3; }
 
         .retry-btn {
-            background: transparent;
-            border: 1px solid white;
+            background: var(--holly-green);
+            border: none;
             color: white;
-            padding: 8px 20px;
-            border-radius: 5px;
+            padding: 10px 25px;
+            border-radius: 25px;
             cursor: pointer;
             margin-top: 20px;
-            opacity: 0.7;
+            font-weight: bold;
+            font-size: 1rem;
+            box-shadow: 0 4px 10px rgba(0, 168, 107, 0.3);
+            transition: 0.2s;
         }
-        .retry-btn:hover { opacity: 1; background: rgba(255,255,255,0.1); }
+        .retry-btn:hover { background: #008f5b; transform: translateY(-2px); }
+
+        /* Snowfall Animation (Subtler) */
+        .snowflake {
+            position: fixed;
+            top: -10px;
+            color: white;
+            font-size: 1em;
+            text-shadow: 0 0 2px rgba(0,0,0,0.1);
+            user-select: none;
+            z-index: 1;
+            animation: fall linear infinite;
+        }
+        @keyframes fall { to { transform: translateY(105vh) translateX(20px); } }
+
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>Santa's Workshop</h1>
-        <div id="intro-text">
-            <p>Will Santa bring you treasure or coal? <br>Click below to find out your fate!</p>
-            <button id="gift-button" onclick="startGiftProcess()">Open My Gift 🎁</button>
-        </div>
+    <nav class="top-nav">
+        <a href="https://mythicxxs.github.io" class="main-site-btn">← Main Site</a>
+    </nav>
 
-        <div id="progress-container">
-            <p id="status-text">Connecting to the North Pole...</p>
-            <div class="progress-bar-bg">
-                <div id="progress-bar" class="progress-bar-fill"></div>
+    <div class="main-wrapper">
+        <div class="container">
+            <img src="https://cdn-icons-png.flaticon.com/512/744/744546.png" alt="Santa Hat" class="santa-icon">
+            <h1>Santa's Workshop</h1>
+            <div id="intro-text" class="intro-text">
+                <p>Ho Ho Ho! Are you on the Naughty or Nice list today?</p>
+                <button id="gift-button" onclick="startGiftProcess()">Find My Present! 🎄</button>
             </div>
-        </div>
 
-        <div id="result-container">
-            <div style="font-size: 1.2rem; color: var(--gold);">✨ SANTA DELIVERED: ✨</div>
-            <img id="gift-img" class="gift-image" src="" alt="Gift Image">
-            <div id="gift-title" class="gift-name"></div>
-            
-            <div class="odds-section">
-                <h3 style="margin: 0; font-size: 1rem;">The Master Gift List & Chances</h3>
-                <table class="odds-table">
-                    <thead>
-                        <tr>
-                            <th>Gift Item</th>
-                            <th>Tier</th>
-                            <th>Chance</th>
-                        </tr>
-                    </thead>
-                    <tbody id="odds-body">
-                        </tbody>
-                </table>
-                <button class="retry-btn" onclick="location.reload()">Try Again</button>
+            <div id="progress-container">
+                <p id="status-text">Connecting to the North Pole...</p>
+                <div class="progress-bar-bg">
+                    <div id="progress-bar" class="progress-bar-fill"></div>
+                </div>
+            </div>
+
+            <div id="result-container">
+                <div class="gift-reveal-header">✨ THE ELVES HAVE DELIVERED: ✨</div>
+                <div class="gift-image-container">
+                    <img id="gift-img" class="gift-image" src="" alt="Gift Image">
+                </div>
+                <div id="gift-title" class="gift-name"></div>
+                
+                <div class="odds-section">
+                    <h3>🎁 The Master Gift List & Odds 🎁</h3>
+                    <table class="odds-table">
+                        <thead>
+                            <tr>
+                                <th>Gift Item</th>
+                                <th>Tier</th>
+                                <th>Chance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="odds-body">
+                            </tbody>
+                    </table>
+                    <button class="retry-btn" onclick="location.reload()">Try Again</button>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Gift Configuration
+        // Gift Configuration (Same data, just applied to new UI)
         const gifts = [
-            { name: "Middle finger", chance: 15, tier: "Bad", color: "tier-bad", img: "https://img.icons8.com/emoji/200/middle-finger-medium-light-skin-tone.png" },
-            { name: "Coal", chance: 15, tier: "Bad", color: "tier-bad", img: "https://cdn-icons-png.flaticon.com/512/3520/3520864.png" },
-            { name: "Banana", chance: 15, tier: "Bad", color: "tier-bad", img: "https://cdn-icons-png.flaticon.com/512/2909/2909808.png" },
-            { name: "Gay guy", chance: 15, tier: "Bad", color: "tier-bad", img: "https://cdn-icons-png.flaticon.com/512/4128/4128170.png" },
-            { name: "Lesbian girl", chance: 15, tier: "Bad", color: "tier-bad", img: "https://cdn-icons-png.flaticon.com/512/4128/4128254.png" },
+            { name: "Middle finger", chance: 15, tier: "Naughty", color: "tier-bad", img: "https://img.icons8.com/emoji/200/middle-finger-medium-light-skin-tone.png" },
+            { name: "Coal", chance: 15, tier: "Naughty", color: "tier-bad", img: "https://cdn-icons-png.flaticon.com/512/3520/3520864.png" },
+            { name: "Banana", chance: 15, tier: "Naughty", color: "tier-bad", img: "https://cdn-icons-png.flaticon.com/512/2909/2909808.png" },
+            { name: "Gay guy", chance: 15, tier: "Naughty", color: "tier-bad", img: "https://cdn-icons-png.flaticon.com/512/4128/4128170.png" },
+            { name: "Lesbian girl", chance: 15, tier: "Naughty", color: "tier-bad", img: "https://cdn-icons-png.flaticon.com/512/4128/4128254.png" },
             
             { name: "Nokia 3310", chance: 4, tier: "Decent", color: "tier-decent", img: "https://cdn-icons-png.flaticon.com/512/186/186241.png" },
             { name: "Winter Cap", chance: 4, tier: "Decent", color: "tier-decent", img: "https://cdn-icons-png.flaticon.com/512/738/738012.png" },
@@ -238,9 +349,9 @@
             { name: "I don't know", chance: 4, tier: "Decent", color: "tier-decent", img: "https://cdn-icons-png.flaticon.com/512/187/187150.png" },
             { name: "Out of ideas", chance: 4, tier: "Decent", color: "tier-decent", img: "https://cdn-icons-png.flaticon.com/512/4148/4148657.png" },
 
-            { name: "Iphone 69 noob lowest", chance: 2, tier: "Good", color: "tier-good", img: "https://cdn-icons-png.flaticon.com/512/644/644458.png" },
-            { name: "Christmas tree", chance: 2, tier: "Good", color: "tier-good", img: "https://cdn-icons-png.flaticon.com/512/624/624816.png" },
-            { name: "Deluxe Santa Factory", chance: 1, tier: "Good", color: "tier-good", img: "https://cdn-icons-png.flaticon.com/512/2653/2653115.png" }
+            { name: "Iphone 69 noob lowest", chance: 2, tier: "Nice!", color: "tier-good", img: "https://cdn-icons-png.flaticon.com/512/644/644458.png" },
+            { name: "Christmas tree", chance: 2, tier: "Nice!", color: "tier-good", img: "https://cdn-icons-png.flaticon.com/512/624/624816.png" },
+            { name: "Deluxe Santa Factory", chance: 1, tier: "Nice!", color: "tier-good", img: "https://cdn-icons-png.flaticon.com/512/2653/2653115.png" }
         ];
 
         function startGiftProcess() {
@@ -252,10 +363,10 @@
             progContainer.style.display = 'block';
 
             const phases = [
-                { time: 0, text: "Santa is investigating you..." },
-                { time: 1500, text: "Santa is choosing your gift..." },
-                { time: 3000, text: "Santa is now coming with your gift..." },
-                { time: 4500, text: "Here is your gift!" }
+                { time: 0, text: "🎅 Santa is checking his list twice..." },
+                { time: 1500, text: "🤔 Elves are debating your behavior..." },
+                { time: 3000, text: "🛷 Sleigh is loading your item..." },
+                { time: 4500, text: "🎁 It's here! Landing on roof!" }
             ];
 
             let start = null;
@@ -281,7 +392,6 @@
         }
 
         function showResult() {
-            // Pick gift logic
             let rand = Math.random() * 100;
             let cumulative = 0;
             let selectedGift = gifts[0];
@@ -299,11 +409,10 @@
             document.getElementById('gift-title').innerText = selectedGift.name;
             document.getElementById('gift-img').src = selectedGift.img;
 
-            // Populate Odds Table
             const tableBody = document.getElementById('odds-body');
             gifts.forEach(gift => {
                 const row = `<tr>
-                    <td>${gift.name}</td>
+                    <td style="font-weight:600">${gift.name}</td>
                     <td class="${gift.color}">${gift.tier}</td>
                     <td>${gift.chance}%</td>
                 </tr>`;
@@ -311,18 +420,19 @@
             });
         }
 
-        // Snowflakes logic
+        // Brighter Snowflakes
         function createSnowflake() {
             const snow = document.createElement('div');
             snow.classList.add('snowflake');
             snow.innerHTML = '❄';
             snow.style.left = Math.random() * 100 + 'vw';
-            snow.style.animationDuration = Math.random() * 3 + 2 + 's';
-            snow.style.opacity = Math.random();
+            snow.style.animationDuration = Math.random() * 3 + 3 + 's'; // Slower fall
+            snow.style.opacity = Math.random() * 0.7 + 0.3; // Brighter snow
             document.body.appendChild(snow);
-            setTimeout(() => snow.remove(), 5000);
+            setTimeout(() => snow.remove(), 6000);
         }
-        setInterval(createSnowflake, 150);
+        setInterval(createSnowflake, 200);
     </script>
 </body>
-</html>
+    </html>
+    
