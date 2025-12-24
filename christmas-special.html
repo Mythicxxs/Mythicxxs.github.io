@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Santa's Magic Workshop</title>
+    <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-red: #d42426;
+            --dark-green: #165b33;
+            --gold: #f8b229;
+            --snow-white: #f8f9fa;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: radial-gradient(circle at center, #1a472a 0%, #072213 100%);
+            font-family: 'Poppins', sans-serif;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        /* Snowfall Animation */
+        .snowflake {
+            position: fixed;
+            top: -10px;
+            color: white;
+            font-size: 1em;
+            user-select: none;
+            z-index: 0;
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            to { transform: translateY(105vh) translateX(20px); }
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            padding: 2.5rem;
+            border-radius: 25px;
+            border: 2px solid var(--gold);
+            box-shadow: 0 0 40px rgba(0,0,0,0.6);
+            width: 90%;
+            max-width: 550px;
+            z-index: 10;
+            margin: auto;
+        }
+
+        h1 {
+            font-family: 'Mountains of Christmas', cursive;
+            font-size: 3.5rem;
+            color: var(--gold);
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        #gift-button {
+            background: var(--primary-red);
+            color: white;
+            border: none;
+            padding: 18px 45px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.3s;
+            box-shadow: 0 4px 15px rgba(212, 36, 38, 0.4);
+            margin-top: 10px;
+        }
+
+        #gift-button:hover {
+            transform: scale(1.05);
+            background: #b31d1f;
+        }
+
+        /* Progress Bar Section */
+        #progress-container {
+            display: none;
+            margin-top: 2rem;
+        }
+
+        #status-text {
+            font-style: italic;
+            margin-bottom: 12px;
+            color: var(--gold);
+            font-weight: 600;
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 24px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .progress-bar-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #ffcf67, #ffffff);
+            box-shadow: 0 0 10px #f8b229;
+        }
+
+        /* Result Section */
+        #result-container {
+            display: none;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .gift-image {
+            width: 180px;
+            height: 180px;
+            object-fit: contain;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border: 3px solid var(--gold);
+            margin: 20px 0;
+        }
+
+        .gift-name {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Odds Table Styling */
+        .odds-section {
+            margin-top: 30px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+            padding-top: 20px;
+        }
+
+        .odds-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            color: #eee;
+            margin-top: 10px;
+        }
+
+        .odds-table th {
+            color: var(--gold);
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(248, 178, 41, 0.3);
+        }
+
+        .odds-table td {
+            padding: 6px 4px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .tier-bad { color: #ff6b6b; font-weight: bold; }
+        .tier-decent { color: #4dabf7; font-weight: bold; }
+        .tier-good { color: #51cf66; font-weight: bold; }
+
+        .retry-btn {
+            background: transparent;
+            border: 1px solid white;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            opacity: 0.7;
+        }
+        .retry-btn:hover { opacity: 1; background: rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Santa's Workshop</h1>
+        <div id="intro-text">
+            <p>Will Santa bring you treasure or coal? <br>Click below to find out your fate!</p>
+            <button id="gift-button" onclick="startGiftProcess()">Open My Gift 🎁</button>
+        </div>
+
+        <div id="progress-container">
+            <p id="status-text">Connecting to the North Pole...</p>
+            <div class="progress-bar-bg">
+                <div id="progress-bar" class="progress-bar-fill"></div>
+            </div>
+        </div>
+
+        <div id="result-container">
+            <div style="font-size: 1.2rem; color: var(--gold);">✨ SANTA DELIVERED: ✨</div>
+            <img id="gift-img" class="gift-image" src="" alt="Gift Image">
+            <div id="gift-title" class="gift-name"></div>
+            
+            <div class="odds-section">
+                <h3 style="margin: 0; font-size: 1rem;">The Master Gift List & Chances</h3>
+                <table class="odds-table">
+                    <thead>
+                        <tr>
+                            <th>Gift Item</th>
+                            <th>Tier</th>
+                            <th>Chance</th>
+                        </tr>
+                    </thead>
+                    <tbody id="odds-body">
+                        </tbody>
+                </table>
+                <button class="retry-btn" onclick="location.reload()">Try Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Gift Configuration
+        const gifts = [
+            { name: "Middle finger", chance: 15, tier: "Bad", color: "tier-bad", img: "https://img.icons8.com/emoji/200/middle-finger-medium-light-skin-tone.png" },
+            { name: "Coal", chance: 15, tier: "Bad", color: "tier-bad", img: "https://cdn-icons-png.flaticon.com/512/3520/3520864.png" },
+            { name: "Banana", chance: 15, tier: "Bad", color: "tier-bad", img: "https://cdn-icons-png.flaticon.com/512/2909/2909808.png" },
+            { name: "Gay guy", chance: 15, tier: "Bad", color: "tier-bad", img: "https://cdn-icons-png.flaticon.com/512/4128/4128170.png" },
+            { name: "Lesbian girl", chance: 15, tier: "Bad", color: "tier-bad", img: "https://cdn-icons-png.flaticon.com/512/4128/4128254.png" },
+            
+            { name: "Nokia 3310", chance: 4, tier: "Decent", color: "tier-decent", img: "https://cdn-icons-png.flaticon.com/512/186/186241.png" },
+            { name: "Winter Cap", chance: 4, tier: "Decent", color: "tier-decent", img: "https://cdn-icons-png.flaticon.com/512/738/738012.png" },
+            { name: "Snow golem", chance: 4, tier: "Decent", color: "tier-decent", img: "https://static.wikia.nocookie.net/minecraft_gamepedia/images/1/11/Snow_Golem_JE2_BE2.png" },
+            { name: "I don't know", chance: 4, tier: "Decent", color: "tier-decent", img: "https://cdn-icons-png.flaticon.com/512/187/187150.png" },
+            { name: "Out of ideas", chance: 4, tier: "Decent", color: "tier-decent", img: "https://cdn-icons-png.flaticon.com/512/4148/4148657.png" },
+
+            { name: "Iphone 69 noob lowest", chance: 2, tier: "Good", color: "tier-good", img: "https://cdn-icons-png.flaticon.com/512/644/644458.png" },
+            { name: "Christmas tree", chance: 2, tier: "Good", color: "tier-good", img: "https://cdn-icons-png.flaticon.com/512/624/624816.png" },
+            { name: "Deluxe Santa Factory", chance: 1, tier: "Good", color: "tier-good", img: "https://cdn-icons-png.flaticon.com/512/2653/2653115.png" }
+        ];
+
+        function startGiftProcess() {
+            document.getElementById('intro-text').style.display = 'none';
+            const progContainer = document.getElementById('progress-container');
+            const progBar = document.getElementById('progress-bar');
+            const statusText = document.getElementById('status-text');
+
+            progContainer.style.display = 'block';
+
+            const phases = [
+                { time: 0, text: "Santa is investigating you..." },
+                { time: 1500, text: "Santa is choosing your gift..." },
+                { time: 3000, text: "Santa is now coming with your gift..." },
+                { time: 4500, text: "Here is your gift!" }
+            ];
+
+            let start = null;
+            const duration = 5000;
+
+            function animate(timestamp) {
+                if (!start) start = timestamp;
+                let progress = timestamp - start;
+                let percent = Math.min((progress / duration) * 100, 100);
+                progBar.style.width = percent + "%";
+
+                phases.forEach(phase => {
+                    if (progress >= phase.time) statusText.innerText = phase.text;
+                });
+
+                if (progress < duration) {
+                    requestAnimationFrame(animate);
+                } else {
+                    showResult();
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+
+        function showResult() {
+            // Pick gift logic
+            let rand = Math.random() * 100;
+            let cumulative = 0;
+            let selectedGift = gifts[0];
+            
+            for (let gift of gifts) {
+                cumulative += gift.chance;
+                if (rand < cumulative) {
+                    selectedGift = gift;
+                    break;
+                }
+            }
+
+            document.getElementById('progress-container').style.display = 'none';
+            document.getElementById('result-container').style.display = 'block';
+            document.getElementById('gift-title').innerText = selectedGift.name;
+            document.getElementById('gift-img').src = selectedGift.img;
+
+            // Populate Odds Table
+            const tableBody = document.getElementById('odds-body');
+            gifts.forEach(gift => {
+                const row = `<tr>
+                    <td>${gift.name}</td>
+                    <td class="${gift.color}">${gift.tier}</td>
+                    <td>${gift.chance}%</td>
+                </tr>`;
+                tableBody.innerHTML += row;
+            });
+        }
+
+        // Snowflakes logic
+        function createSnowflake() {
+            const snow = document.createElement('div');
+            snow.classList.add('snowflake');
+            snow.innerHTML = '❄';
+            snow.style.left = Math.random() * 100 + 'vw';
+            snow.style.animationDuration = Math.random() * 3 + 2 + 's';
+            snow.style.opacity = Math.random();
+            document.body.appendChild(snow);
+            setTimeout(() => snow.remove(), 5000);
+        }
+        setInterval(createSnowflake, 150);
+    </script>
+</body>
+</html>
