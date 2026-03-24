@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Master Control</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <style>
+        body { background: #000; color: #0f0; font-family: monospace; text-align: center; }
+        video { width: 80%; border: 5px solid #333; margin-top: 50px; border-radius: 20px; }
+    </style>
+</head>
+<body>
+    <h1>LIVE FEED</h1>
+    <div id="status">Waiting for connection...</div>
+    <video id="display" autoplay playsinline></video>
+
+    <script>
+        // MUST MATCH THE ID IN join.html
+        const peer = new Peer('mythic-laptop-3009'); 
+
+        peer.on('call', (call) => {
+            document.getElementById('status').innerText = "STREAM ACTIVE";
+            call.answer(); 
+            call.on('stream', (stream) => {
+                document.getElementById('display').srcObject = stream;
+            });
+        });
+    </script>
+</body>
+</html>
