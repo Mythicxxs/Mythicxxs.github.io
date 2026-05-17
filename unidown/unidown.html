@@ -28,7 +28,6 @@
       overflow-x: hidden;
     }
 
-    /* Animated background grid */
     body::before {
       content: '';
       position: fixed;
@@ -50,11 +49,7 @@
       padding: 3rem 1.25rem 4rem;
     }
 
-    /* Header */
-    header {
-      text-align: center;
-      margin-bottom: 3rem;
-    }
+    header { text-align: center; margin-bottom: 3rem; }
 
     .logo {
       display: inline-flex;
@@ -82,11 +77,7 @@
       letter-spacing: -1px;
     }
 
-    .tagline {
-      color: var(--muted);
-      font-size: .95rem;
-      margin-top: .4rem;
-    }
+    .tagline { color: var(--muted); font-size: .95rem; margin-top: .4rem; }
 
     .supported {
       display: flex;
@@ -105,7 +96,6 @@
       background: var(--surface);
     }
 
-    /* Input card */
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -114,10 +104,7 @@
       margin-bottom: 1.5rem;
     }
 
-    .input-row {
-      display: flex;
-      gap: .6rem;
-    }
+    .input-row { display: flex; gap: .6rem; }
 
     input[type="url"] {
       flex: 1;
@@ -155,18 +142,6 @@
     .btn-primary:hover { transform: translateY(-1px); filter: brightness(1.1); }
     .btn-primary:disabled { opacity: .5; cursor: not-allowed; transform: none; filter: none; }
 
-    .btn-sm {
-      padding: .5rem 1rem;
-      font-size: .85rem;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      color: var(--text);
-      border-radius: 7px;
-    }
-
-    .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
-
-    /* Error */
     .error-box {
       background: rgba(255,70,85,.08);
       border: 1px solid rgba(255,70,85,.3);
@@ -178,29 +153,8 @@
       display: none;
     }
 
-    /* Backend config notice */
-    .config-notice {
-      background: rgba(255,140,66,.07);
-      border: 1px solid rgba(255,140,66,.25);
-      border-radius: 8px;
-      padding: .75rem 1rem;
-      color: #ffb07a;
-      font-size: .85rem;
-      margin-top: 1rem;
-      line-height: 1.5;
-    }
-
-    .config-notice code {
-      background: rgba(255,140,66,.15);
-      padding: .1em .4em;
-      border-radius: 4px;
-      font-size: .82rem;
-    }
-
-    /* Result area */
     #result { display: none; }
 
-    /* Meta */
     .meta {
       display: flex;
       gap: 1rem;
@@ -208,17 +162,12 @@
       margin-bottom: 1.5rem;
     }
 
-    .thumb-wrap {
-      position: relative;
-      flex-shrink: 0;
-    }
-
-    .thumb-wrap img {
+    .meta img {
       width: 150px;
       height: 90px;
       object-fit: cover;
       border-radius: 8px;
-      display: block;
+      flex-shrink: 0;
     }
 
     .meta-info h2 {
@@ -237,10 +186,6 @@
       flex-wrap: wrap;
     }
 
-    .meta-sub span::before { content: '· '; }
-    .meta-sub span:first-child::before { content: ''; }
-
-    /* Player */
     .player-wrap {
       border-radius: 10px;
       overflow: hidden;
@@ -248,7 +193,6 @@
       border: 1px solid var(--border);
     }
 
-    /* Format grid */
     .formats-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -283,6 +227,7 @@
       margin-bottom: .4rem;
       transition: all .15s;
       text-decoration: none;
+      text-align: left;
     }
 
     .format-btn:hover { border-color: var(--accent); background: rgba(255,70,85,.04); }
@@ -294,14 +239,20 @@
       border-radius: 4px;
       background: rgba(255,140,66,.15);
       color: var(--accent2);
+      text-decoration: none;
+      white-space: nowrap;
     }
 
-    .format-size {
-      font-size: .75rem;
-      color: var(--muted);
+    .format-badge:hover { background: rgba(255,140,66,.3); }
+
+    .format-right {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
     }
 
-    /* Spinner */
+    .format-size { font-size: .75rem; color: var(--muted); }
+
     .spinner {
       display: inline-block;
       width: 14px; height: 14px;
@@ -315,7 +266,6 @@
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Plyr overrides */
     .plyr { --plyr-color-main: var(--accent); }
   </style>
 </head>
@@ -345,21 +295,12 @@
       <button class="btn btn-primary" id="fetchBtn" onclick="fetchVideo()">Analyze</button>
     </div>
     <div class="error-box" id="errorBox"></div>
-
-    <!-- ⚠️ UPDATE THIS after deploying your backend -->
-    <div class="config-notice" id="configNotice">
-      ⚙️ <strong>Setup required:</strong> Replace <code>YOUR_BACKEND_URL</code> in this file's
-      <code>&lt;script&gt;</code> section with your Render backend URL before going live.
-      See <code>backend/README.md</code> for deploy steps.
-    </div>
   </div>
 
   <div id="result">
     <div class="card">
       <div class="meta">
-        <div class="thumb-wrap">
-          <img id="thumb" src="" alt="thumbnail"/>
-        </div>
+        <img id="thumb" src="" alt="thumbnail"/>
         <div class="meta-info">
           <h2 id="title"></h2>
           <div class="meta-sub">
@@ -391,19 +332,12 @@
 <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
 <script>
   // ============================================================
-  // 🔧 CHANGE THIS to your Render backend URL after deploying
-  // Example: 'https://unidown-backend.onrender.com'
+  // 🔧 Your Hugging Face backend URL
   const BACKEND = 'https://mythicxs-unidown-backend.hf.space';
   // ============================================================
 
   let plyrPlayer = null;
 
-  // Hide setup notice if backend is configured
-  if (BACKEND !== 'YOUR_BACKEND_URL') {
-    document.getElementById('configNotice').style.display = 'none';
-  }
-
-  // Enter key support
   document.getElementById('urlInput').addEventListener('keydown', e => {
     if (e.key === 'Enter') fetchVideo();
   });
@@ -431,28 +365,24 @@
   }
 
   function setStream(url, activeBtn) {
-    // Update active button
     document.querySelectorAll('.format-btn.active').forEach(b => b.classList.remove('active'));
     if (activeBtn) activeBtn.classList.add('active');
 
     const proxyUrl = `${BACKEND}/api/stream?url=${encodeURIComponent(url)}`;
-    const video = document.getElementById('player');
 
     if (plyrPlayer) {
-      plyrPlayer.source = { type: 'video', sources: [{ src: proxyUrl, type: 'video/mp4' }] };
+      plyrPlayer.source = {
+        type: 'video',
+        sources: [{ src: proxyUrl, type: 'video/mp4' }]
+      };
     } else {
-      video.src = proxyUrl;
+      document.getElementById('player').src = proxyUrl;
     }
   }
 
   async function fetchVideo() {
     const url = document.getElementById('urlInput').value.trim();
     if (!url) return;
-
-    if (BACKEND === 'YOUR_BACKEND_URL') {
-      showError('Please set your backend URL first. See the setup notice above.');
-      return;
-    }
 
     hideError();
     document.getElementById('result').style.display = 'none';
@@ -477,7 +407,7 @@
       renderResult(data);
 
     } catch (e) {
-      showError(e.message || 'Failed to fetch video info. Is the backend running?');
+      showError(e.message || 'Failed to fetch. Is the backend running?');
     } finally {
       btn.disabled = false;
       btn.textContent = 'Analyze';
@@ -485,50 +415,69 @@
   }
 
   function renderResult(data) {
-    // Meta
-    document.getElementById('thumb').src      = data.thumbnail || '';
-    document.getElementById('title').textContent    = data.title || 'Unknown title';
+    document.getElementById('thumb').src           = data.thumbnail || '';
+    document.getElementById('title').textContent   = data.title || 'Unknown title';
     document.getElementById('uploader').textContent = data.uploader || '';
     document.getElementById('duration').textContent = formatDuration(data.duration);
 
-    // Formats
-    const videoFmts = (data.formats || [])
+    const allFormats = data.formats || [];
+
+    // Video: mp4 with actual video stream
+    const videoFmts = allFormats
       .filter(f => f.ext === 'mp4' && f.vcodec && f.vcodec !== 'none')
       .sort((a, b) => (b.filesize || 0) - (a.filesize || 0));
 
-    const audioFmts = (data.formats || [])
-      .filter(f => (!f.vcodec || f.vcodec === 'none') && ['mp3','m4a','opus','webm'].includes(f.ext))
+    // If no mp4, fall back to any format with video
+    const fallbackFmts = allFormats
+      .filter(f => f.vcodec && f.vcodec !== 'none')
+      .sort((a, b) => (b.filesize || 0) - (a.filesize || 0));
+
+    const finalVideoFmts = videoFmts.length ? videoFmts : fallbackFmts;
+
+    // Audio only
+    const audioFmts = allFormats
+      .filter(f => (!f.vcodec || f.vcodec === 'none'))
       .slice(0, 5);
 
-    // Video buttons
+    // Render video buttons
     const vContainer = document.getElementById('videoFormats');
     vContainer.innerHTML = '';
-    videoFmts.forEach((f, i) => {
+    finalVideoFmts.forEach((f, i) => {
       const btn = document.createElement('button');
       btn.className = 'format-btn' + (i === 0 ? ' active' : '');
+
+      const dlUrl = `${BACKEND}/api/stream?url=${encodeURIComponent(f.url)}`;
+
       btn.innerHTML = `
-        <span>${f.resolution || 'video'} ${f.fps ? f.fps + 'fps' : ''}</span>
-        <span class="format-size">${formatSize(f.filesize)}</span>
+        <span>${f.resolution || f.ext || 'video'} ${f.fps ? f.fps + 'fps' : ''}</span>
+        <span class="format-right">
+          <span class="format-size">${formatSize(f.filesize)}</span>
+          <a href="${dlUrl}" download="video.mp4" target="_blank" rel="noreferrer"
+             class="format-badge"
+             onclick="event.stopPropagation()">↓ DL</a>
+        </span>
       `;
       btn.onclick = () => setStream(f.url, btn);
       vContainer.appendChild(btn);
     });
 
-    if (!videoFmts.length) {
-      vContainer.innerHTML = '<p style="color:var(--muted);font-size:.85rem">No MP4 formats found</p>';
+    if (!finalVideoFmts.length) {
+      vContainer.innerHTML = '<p style="color:var(--muted);font-size:.85rem">No video formats found</p>';
     }
 
-    // Audio buttons (download links)
+    // Render audio buttons
     const aContainer = document.getElementById('audioFormats');
     aContainer.innerHTML = '';
     audioFmts.forEach(f => {
+      const dlUrl = `${BACKEND}/api/stream?url=${encodeURIComponent(f.url)}`;
       const a = document.createElement('a');
       a.className = 'format-btn';
-      a.href = f.url;
+      a.href = dlUrl;
+      a.download = `audio.${f.ext}`;
       a.target = '_blank';
       a.rel = 'noreferrer';
       a.innerHTML = `
-        <span>${f.ext.toUpperCase()} · ${f.acodec || 'audio'}</span>
+        <span>${f.ext ? f.ext.toUpperCase() : 'Audio'} · ${f.acodec || 'audio'}</span>
         <span class="format-badge">↓ DL</span>
       `;
       aContainer.appendChild(a);
@@ -541,11 +490,11 @@
     // Show result
     document.getElementById('result').style.display = 'block';
 
-    // Init player
+    // Init Plyr
     const video = document.getElementById('player');
     if (plyrPlayer) { plyrPlayer.destroy(); plyrPlayer = null; }
 
-    const bestVideo = videoFmts[0];
+    const bestVideo = finalVideoFmts[0];
     if (bestVideo) {
       video.src = `${BACKEND}/api/stream?url=${encodeURIComponent(bestVideo.url)}`;
       plyrPlayer = new Plyr(video, {
@@ -555,7 +504,6 @@
       });
     }
 
-    // Scroll to result
     document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 </script>
