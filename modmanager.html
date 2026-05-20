@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fabric Mod Manager</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+  :root {
+    --color-background-primary: #ffffff;
+    --color-background-secondary: #f7f6f3;
+    --color-background-tertiary: #f0efe9;
+    --color-text-primary: #1a1a18;
+    --color-text-secondary: #6b6a65;
+    --color-border-tertiary: rgba(0,0,0,0.10);
+    --color-border-secondary: rgba(0,0,0,0.18);
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'Menlo', 'Consolas', monospace;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-background-primary: #1e1e1c;
+      --color-background-secondary: #252523;
+      --color-background-tertiary: #2c2c2a;
+      --color-text-primary: #f0efe9;
+      --color-text-secondary: #9e9d98;
+      --color-border-tertiary: rgba(255,255,255,0.08);
+      --color-border-secondary: rgba(255,255,255,0.15);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-sans);
+    color: var(--color-text-primary);
+    background: var(--color-background-tertiary);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+  }
+  .container {
+    max-width: 780px;
+    margin: 0 auto;
+    background: var(--color-background-primary);
+    border-radius: var(--border-radius-lg);
+    border: 0.5px solid var(--color-border-secondary);
+    padding: 1.5rem;
+  }
+  .header { margin-bottom: 1rem; }
+  .header h1 { font-size: 20px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+  .header p { font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; }
+  .env { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: .875rem; }
+  @media(max-width:520px){ .env { grid-template-columns: 1fr 1fr; } }
+  .env label { font-size: 11px; color: var(--color-text-secondary); display: block; margin-bottom: 3px; }
+  .env input { width: 100%; height: 32px; font-size: 13px; padding: 0 10px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: var(--color-background-primary); color: var(--color-text-primary); outline: none; }
+  .env input:focus { box-shadow: 0 0 0 2px #1D9E7540; }
+  .drop { border: 1.5px dashed var(--color-border-secondary); border-radius: var(--border-radius-lg); padding: 1.75rem 1rem; text-align: center; cursor: pointer; transition: border-color .15s, background .15s; background: var(--color-background-secondary); margin-bottom: .875rem; user-select: none; }
+  .drop:hover, .drop.over { border-color: #1D9E75; background: #E1F5EE; }
+  .drop .drop-icon { font-size: 28px; color: var(--color-text-secondary); display: block; margin-bottom: 6px; transition: color .15s; }
+  .drop:hover .drop-icon, .drop.over .drop-icon { color: #1D9E75; }
+  .drop .drop-label { font-size: 13px; color: var(--color-text-secondary); }
+  .drop .drop-hint { font-size: 11px; color: var(--color-text-secondary); margin-top: 3px; opacity: .7; }
+  input[type=file] { display: none; }
+  .bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: .875rem; }
+  button { height: 32px; padding: 0 12px; font-size: 12px; font-family: var(--font-sans); border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: transparent; color: var(--color-text-primary); cursor: pointer; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; transition: background .12s, opacity .12s; }
+  button:hover:not(:disabled) { background: var(--color-background-secondary); }
+  button:disabled { opacity: .38; cursor: not-allowed; }
+  .btn-p { background: #1D9E75!important; border-color: #1D9E75!important; color: #fff!important; }
+  .btn-p:hover:not(:disabled) { background: #0F6E56!important; }
+  .btn-a { background: #FAEEDA!important; border-color: #FAC775!important; color: #854F0B!important; }
+  .btn-a:hover:not(:disabled) { background: #FAC775!important; }
+  .btn-b { background: #E6F1FB!important; border-color: #B5D4F4!important; color: #0C447C!important; }
+  .btn-b:hover:not(:disabled) { background: #B5D4F4!important; }
+  .btn-g { background: #EAF3DE!important; border-color: #C0DD97!important; color: #27500A!important; }
+  .btn-g:hover:not(:disabled) { background: #C0DD97!important; }
+  .spacer { flex: 1; }
+  .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: .875rem; }
+  @media(max-width:520px){ .stats { grid-template-columns: repeat(3,1fr); } }
+  .stat { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: .5rem .75rem; }
+  .stat-l { font-size: 10px; color: var(--color-text-secondary); margin-bottom: 2px; }
+  .stat-v { font-size: 20px; font-weight: 500; color: var(--color-text-primary); }
+  .stat-v.ok { color: #1D9E75; } .stat-v.w { color: #BA7517; } .stat-v.e { color: #A32D2D; } .stat-v.b { color: #185FA5; }
+  .pb { height: 3px; background: var(--color-background-secondary); border-radius: 2px; overflow: hidden; margin-bottom: .5rem; }
+  .pb-fill { height: 100%; background: #1D9E75; border-radius: 2px; transition: width .2s; width: 0%; }
+  .pb-status { font-size: 11px; color: var(--color-text-secondary); margin-bottom: .5rem; min-height: 14px; }
+  .tabs { display: flex; border-bottom: 0.5px solid var(--color-border-tertiary); margin-bottom: .75rem; }
+  .tab { padding: 5px 14px; font-size: 12px; cursor: pointer; border-bottom: 2px solid transparent; color: var(--color-text-secondary); transition: all .12s; white-space: nowrap; }
+  .tab.on { border-bottom-color: #1D9E75; color: var(--color-text-primary); font-weight: 500; }
+  .list { display: flex; flex-direction: column; gap: 5px; max-height: 460px; overflow-y: auto; padding-right: 2px; }
+  .card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: .7rem 1rem; border-left: 3px solid var(--color-border-tertiary); }
+  .card.ok { border-left-color: #1D9E75; } .card.w { border-left-color: #BA7517; } .card.e { border-left-color: #A32D2D; } .card.unk { border-left-color: #888780; }
+  .card-row { display: flex; align-items: flex-start; gap: 10px; }
+  .icon { width: 32px; height: 32px; border-radius: 6px; object-fit: cover; flex-shrink: 0; background: var(--color-background-secondary); }
+  .icon-ph { width: 32px; height: 32px; border-radius: 6px; background: var(--color-background-secondary); display: flex; align-items: center; justify-content: center; color: var(--color-text-secondary); font-size: 13px; flex-shrink: 0; }
+  .info { flex: 1; min-width: 0; }
+  .name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .desc { font-size: 11px; color: var(--color-text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; align-items: center; }
+  .badge { font-size: 10px; padding: 2px 7px; border-radius: 10px; font-weight: 500; line-height: 1.5; }
+  .bg-ok { background: #EAF3DE; color: #27500A; } .bg-w { background: #FAEEDA; color: #633806; } .bg-e { background: #FCEBEB; color: #791F1F; }
+  .bg-g { background: #F1EFE8; color: #444441; } .bg-b { background: #E6F1FB; color: #0C447C; } .bg-p { background: #EEEDFE; color: #3C3489; }
+  .vc { font-size: 10px; padding: 2px 5px; background: var(--color-background-secondary); border-radius: 3px; font-family: var(--font-mono); color: var(--color-text-secondary); }
+  .vc.new { background: #FAEEDA; color: #633806; }
+  .arr { font-size: 10px; color: #BA7517; }
+  .actions { display: flex; gap: 4px; flex-shrink: 0; align-items: flex-start; }
+  .actions button { height: 26px; padding: 0 7px; font-size: 11px; }
+  .issues { margin-top: 6px; background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 6px 8px; display: flex; flex-direction: column; gap: 3px; }
+  .issue { font-size: 11px; display: flex; gap: 5px; align-items: flex-start; color: var(--color-text-secondary); }
+  .override-row { display: flex; gap: 5px; margin-top: 5px; }
+  .override-row input { flex: 1; height: 26px; font-size: 11px; padding: 0 7px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: var(--color-background-primary); color: var(--color-text-primary); font-family: var(--font-mono); }
+  .spin { display: inline-block; width: 11px; height: 11px; border: 2px solid #1D9E7540; border-top-color: #1D9E75; border-radius: 50%; animation: spin .6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .log { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: .6rem .9rem; font-size: 11px; font-family: var(--font-mono); max-height: 110px; overflow-y: auto; margin-top: .75rem; }
+  .log-row { display: flex; gap: 8px; line-height: 1.5; }
+  .log-t { color: var(--color-text-secondary); flex-shrink: 0; }
+  .log-ok { color: #1D9E75; } .log-w { color: #BA7517; } .log-e { color: #A32D2D; } .log-i { color: var(--color-text-secondary); }
+  .export-box { background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: .875rem 1rem; margin-top: .75rem; }
+  .export-title { font-size: 13px; font-weight: 500; margin-bottom: .625rem; }
+  .export-list { max-height: 160px; overflow-y: auto; margin-bottom: .75rem; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); background: var(--color-background-primary); }
+  .export-row { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-bottom: 0.5px solid var(--color-border-tertiary); font-size: 12px; }
+  .export-row:last-child { border: none; }
+  .export-name { flex: 1; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .export-ver { font-family: var(--font-mono); font-size: 10px; color: var(--color-text-secondary); flex-shrink: 0; }
+  .export-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+  .notice { background: #E6F1FB; border: 0.5px solid #B5D4F4; border-radius: var(--border-radius-md); padding: .6rem .875rem; font-size: 12px; color: #0C447C; display: flex; gap: 8px; align-items: flex-start; margin-bottom: .75rem; }
+  .empty { padding: 2.5rem; text-align: center; color: var(--color-text-secondary); font-size: 12px; }
+  a { color: inherit; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="header">
+  <h1><i class="ti ti-package" style="color:#1D9E75;font-size:20px"></i> Fabric mod manager</h1>
+  <p>Drop your mods folder → auto-identify → parallel check → one-click export</p>
+</div>
+
+<div class="env">
+  <div><label>Minecraft version</label><input id="mcv" value="1.21.11" placeholder="1.21.11"></div>
+  <div><label>Fabric loader</label><input id="ldr" value="0.18.4" placeholder="0.18.4"></div>
+  <div><label>Upgrade target <span style="opacity:.6">(optional)</span></label><input id="upg" placeholder="e.g. 1.22" oninput="upgradeHint()"></div>
+</div>
+
+<div id="upgradeNotice" style="display:none" class="notice">
+  <i class="ti ti-info-circle" style="font-size:15px;flex-shrink:0;margin-top:1px"></i>
+  <span>Upgrade target set. Click <strong>Check all</strong> to re-check every mod against <span id="upgradeTarget"></span>.</span>
+</div>
+
+<div class="drop" id="drop" onclick="document.getElementById('fi').click()">
+  <i class="ti ti-folder-open drop-icon"></i>
+  <div class="drop-label">Drop your <strong>mods folder</strong> or click to pick .jar files</div>
+  <div class="drop-hint">Reads filenames only — nothing leaves your browser</div>
+</div>
+<input type="file" id="fi" multiple accept=".jar,.disabled">
+
+<div class="bar">
+  <button class="btn-p" id="checkBtn" onclick="checkAll()"><i class="ti ti-refresh"></i> Check all</button>
+  <button id="fixBtn" style="display:none" class="btn-a" onclick="fixDeps()"><i class="ti ti-tool"></i> Fix deps</button>
+  <button id="expBtn" style="display:none" class="btn-g" onclick="showExport()"><i class="ti ti-download"></i> Export updates</button>
+  <button id="mrBtn" style="display:none" class="btn-b" onclick="exportMrpack()"><i class="ti ti-file-zip"></i> .mrpack</button>
+  <div class="spacer"></div>
+  <button onclick="clearAll()" style="color:var(--color-text-secondary)"><i class="ti ti-trash"></i> Clear</button>
+</div>
+
+<div id="pbWrap" style="display:none">
+  <div class="pb"><div class="pb-fill" id="pbf"></div></div>
+  <div class="pb-status" id="pbStatus"></div>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="stat-l">Loaded</div><div class="stat-v" id="sT">0</div></div>
+  <div class="stat"><div class="stat-l">Identified</div><div class="stat-v b" id="sI">—</div></div>
+  <div class="stat"><div class="stat-l">Up to date</div><div class="stat-v ok" id="sO">—</div></div>
+  <div class="stat"><div class="stat-l">Updates</div><div class="stat-v w" id="sU">—</div></div>
+  <div class="stat"><div class="stat-l">Issues</div><div class="stat-v e" id="sE">—</div></div>
+</div>
+
+<div class="tabs">
+  <div class="tab on" onclick="setTab('all',this)">All</div>
+  <div class="tab" onclick="setTab('updates',this)">Updates</div>
+  <div class="tab" onclick="setTab('issues',this)">Issues</div>
+  <div class="tab" onclick="setTab('unknown',this)">Unknown</div>
+</div>
+
+<div class="list" id="list">
+  <div class="empty"><i class="ti ti-folder" style="font-size:28px;display:block;margin-bottom:8px"></i>Drop your mods folder to get started</div>
+</div>
+
+<div id="exportBox" style="display:none" class="export-box">
+  <div class="export-title"><i class="ti ti-arrow-up-circle" style="margin-right:5px"></i>Available updates</div>
+  <div class="export-list" id="exportList"></div>
+  <div class="export-btns">
+    <button class="btn-p" onclick="openAll()"><i class="ti ti-external-link"></i> Open all on Modrinth</button>
+    <button onclick="copyLinks()"><i class="ti ti-copy"></i> Copy URLs</button>
+    <button onclick="exportTxt()"><i class="ti ti-file-text"></i> Download .txt</button>
+    <button class="btn-b" onclick="exportMrpack()"><i class="ti ti-file-zip"></i> Export .mrpack</button>
+  </div>
+</div>
+
+<div class="log" id="logBox" style="display:none"></div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+const API = 'https://api.modrinth.com/v2';
+const SKIP_IDS = new Set(['P7dR8mSH','gvQqBUqZ','Ha28R6CL']);
+let mods = [];
+let tab = 'all';
+const mcv = () => document.getElementById('mcv').value.trim() || '1.21.11';
+const ldr = () => document.getElementById('ldr').value.trim() || '0.18.4';
+
+function log(msg, t='i') {
+  const b = document.getElementById('logBox');
+  b.style.display = 'block';
+  const ts = new Date().toLocaleTimeString('en',{hour12:false});
+  b.insertAdjacentHTML('beforeend', `<div class="log-row"><span class="log-t">${ts}</span><span class="log-${t}">${msg}</span></div>`);
+  b.scrollTop = b.scrollHeight;
+}
+
+const drop = document.getElementById('drop');
+drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
+drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+drop.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('over'); handleFiles([...e.dataTransfer.files]); });
+document.getElementById('fi').addEventListener('change', e => handleFiles([...e.target.files]));
+
+function slugFromFile(n) {
+  let s = n.replace(/\.jar(\.disabled)?$/i, '');
+  s = s.replace(/\+.*/,'');
+  s = s.replace(/[-_](?:fabric|forge|neoforge|quilt|mc|minecraft)?[-_]?1\.\d[\d.]*[-+][^\s]*/gi, '');
+  s = s.replace(/[-_](?:fabric|forge|neoforge|quilt)$/i, '');
+  s = s.replace(/[-_]v?\d+\.\d[\d.\-+a-zA-Z]*/g, '');
+  s = s.replace(/[-_]\d+$/g, '');
+  return s.toLowerCase().replace(/[_\s]+/g,'-').replace(/[^a-z0-9-]/g,'').replace(/-+/g,'-').replace(/^-|-$/g,'');
+}
+
+function handleFiles(files) {
+  const jars = files.filter(f => /\.jar(\.disabled)?$/i.test(f.name));
+  if (!jars.length) { log('No .jar files found', 'w'); return; }
+  const ex = new Set(mods.map(m => m.filename));
+  let added = 0;
+  for (const f of jars) {
+    if (ex.has(f.name)) continue;
+    mods.push({ filename:f.name, slug:slugFromFile(f.name), name:f.name.replace(/\.jar.*$/i,''), desc:'', icon:null, id:null, found:false, status:'unchecked', issues:[], currentVer:null, latestVer:null, latestUrl:null, latestFile:null, disabled:f.name.endsWith('.disabled'), isAutoDep:false });
+    added++;
+  }
+  log(`Added ${added} mod(s)`, 'ok');
+  stats(); render();
+}
+
+async function get(url) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+
+async function findProject(slug) {
+  const variants = [slug, slug.replace(/-/g,''), slug.replace(/-/g,'_'), slug.split('-').slice(0,-1).join('-')].filter((v,i,a) => v && a.indexOf(v)===i);
+  for (const v of variants) {
+    try { const p = await get(`${API}/project/${encodeURIComponent(v)}`); if (p?.id) return p; } catch(e) {}
+  }
+  try {
+    const res = await get(`${API}/search?query=${encodeURIComponent(slug.replace(/-/g,' '))}&facets=%5B%5B%22project_type%3Amod%22%5D%2C%5B%22categories%3Afabric%22%5D%5D&limit=8`);
+    if (res.hits?.length) {
+      const scored = res.hits.map(h => ({ h, s: strSim(slug, h.slug) })).sort((a,b) => b.s-a.s);
+      if (scored[0].s > 0.55) return await get(`${API}/project/${scored[0].h.slug}`);
+    }
+  } catch(e) {}
+  return null;
+}
+
+function strSim(a, b) {
+  if (a===b) return 1;
+  const sa = new Set(a.split('-')), sb = new Set(b.split('-'));
+  let shared = 0; for (const w of sa) if (sb.has(w)) shared++;
+  const wordScore = shared / Math.max(sa.size, sb.size);
+  const la = a.replace(/-/g,''), lb = b.replace(/-/g,'');
+  let charMatch = 0;
+  for (let i=0; i<Math.min(la.length,lb.length); i++) if (la[i]===lb[i]) charMatch++;
+  return wordScore*0.6 + (charMatch/Math.max(la.length,lb.length))*0.4;
+}
+
+async function getVersions(id, mc) {
+  try { return await get(`${API}/project/${encodeURIComponent(id)}/version?loaders=%5B%22fabric%22%5D&game_versions=%5B%22${encodeURIComponent(mc)}%22%5D`); }
+  catch(e) { return []; }
+}
+
+async function identifyMod(m) {
+  const p = await findProject(m.slug);
+  if (!p) return false;
+  m.id=p.id; m.slug=p.slug; m.name=p.title; m.desc=p.description||''; m.icon=p.icon_url||null; m.found=true;
+  return true;
+}
+
+async function checkOneMod(m, mc) {
+  m.status='checking'; m.issues=[];
+  if (!m.found) {
+    const ok = await identifyMod(m);
+    if (!ok) { m.status='unknown'; m.issues=[{t:'e', msg:'Not found on Modrinth — use override below'}]; return; }
+  }
+  const versions = await getVersions(m.id, mc);
+  if (!versions.length) {
+    const allV = await getVersions(m.id, '');
+    const available = [...new Set((allV||[]).flatMap(v=>v.game_versions||[]).filter(v=>v.startsWith('1.')))].sort().reverse().slice(0,3);
+    m.issues.push({t:'e', msg:`No Fabric build for MC ${mc}${available.length?' (available: '+available.join(', ')+')':''}`});
+    m.status='err'; return;
+  }
+  const latest = versions[0];
+  const file = latest.files?.find(f=>f.primary) || latest.files?.[0];
+  m.latestVer = latest.version_number;
+  m.latestUrl = file?.url || null;
+  m.latestFile = file?.filename || null;
+  if (!m.currentVer) m.currentVer = latest.version_number;
+  if (m.currentVer !== latest.version_number) m.issues.push({t:'w', msg:`Update available: ${m.currentVer} → ${latest.version_number}`});
+  for (const dep of (latest.dependencies||[])) {
+    if (dep.dependency_type==='required' && dep.project_id && !SKIP_IDS.has(dep.project_id) && !mods.find(x=>x.id===dep.project_id))
+      m.issues.push({t:'e', msg:`Missing required dep`, depId:dep.project_id});
+  }
+  m.status = m.issues.some(i=>i.t==='e') ? 'err' : m.issues.some(i=>i.t==='w') ? 'w' : 'ok';
+}
+
+async function checkAll() {
+  if (!mods.length) { log('No mods loaded', 'w'); return; }
+  const upgTarget = document.getElementById('upg').value.trim();
+  const mc = upgTarget || mcv();
+  if (upgTarget) { document.getElementById('mcv').value=mc; document.getElementById('upg').value=''; upgradeHint(); }
+  const btn = document.getElementById('checkBtn');
+  btn.innerHTML='<span class="spin"></span> Checking...'; btn.disabled=true;
+  document.getElementById('pbWrap').style.display='block';
+  for (const m of mods) { m.status='unchecked'; m.issues=[]; m.found=!!m.id; m.latestVer=null; m.latestUrl=null; }
+  let done = 0;
+  const queue = [...mods];
+  const setPb = () => {
+    document.getElementById('pbf').style.width = Math.round((done/mods.length)*100)+'%';
+    document.getElementById('pbStatus').textContent = `Checking ${done} / ${mods.length}…`;
+  };
+  async function worker() {
+    while (queue.length) {
+      const m = queue.shift();
+      m.status='checking'; render();
+      try {
+        await checkOneMod(m, mc);
+        log(`${m.name}: ${m.status==='ok'?'up to date':m.issues[0]?.msg||m.status}`, m.status==='ok'?'ok':m.status==='err'?'e':'w');
+      } catch(err) {
+        m.status='err'; m.issues=[{t:'e',msg:err.message}]; log(`${m.name}: ${err.message}`,'e');
+      }
+      done++; setPb(); stats(); render();
+      await new Promise(r=>setTimeout(r,80));
+    }
+  }
+  await Promise.all(Array.from({length:5}, ()=>worker()));
+  document.getElementById('pbf').style.width='100%';
+  document.getElementById('pbStatus').textContent=`Done — ${mods.filter(m=>m.status==='ok').length} ok, ${mods.filter(m=>m.issues.some(i=>i.msg?.startsWith('Update'))).length} updates, ${mods.filter(m=>m.status==='err').length} errors`;
+  document.getElementById('fixBtn').style.display = mods.some(m=>m.issues.some(i=>i.depId)) ? 'inline-flex':'none';
+  document.getElementById('expBtn').style.display = mods.some(m=>m.issues.some(i=>i.msg?.startsWith('Update'))) ? 'inline-flex':'none';
+  document.getElementById('mrBtn').style.display = 'inline-flex';
+  btn.innerHTML='<i class="ti ti-refresh"></i> Check all'; btn.disabled=false;
+  stats(); render();
+}
+
+async function fixDeps() {
+  const ids = [...new Set(mods.flatMap(m=>m.issues.filter(i=>i.depId).map(i=>i.depId)))].filter(id=>!mods.find(m=>m.id===id));
+  if (!ids.length) { log('All deps present','ok'); return; }
+  for (const id of ids) {
+    try {
+      const p = await get(`${API}/project/${id}`);
+      if (!mods.find(m=>m.id===p.id)) {
+        mods.push({filename:`[dep] ${p.slug}.jar`,slug:p.slug,name:p.title,desc:p.description||'',icon:p.icon_url||null,id:p.id,found:true,status:'unchecked',issues:[],currentVer:null,latestVer:null,latestUrl:null,latestFile:null,disabled:false,isAutoDep:true});
+        log(`Added dep: ${p.title}`,'ok');
+      }
+    } catch(e) { log(`Cannot resolve ${id}`,'e'); }
+    await new Promise(r=>setTimeout(r,150));
+  }
+  for (const m of mods) m.issues = m.issues.filter(i=>!i.depId);
+  document.getElementById('fixBtn').style.display='none';
+  log('Run Check all to verify','w');
+  stats(); render();
+}
+
+async function manualOverride(idx, slug) {
+  if (!slug.trim()) return;
+  const m = mods[idx];
+  m.slug=slug.trim(); m.found=false; m.id=null; m.status='unchecked'; m.issues=[];
+  const ok = await identifyMod(m);
+  if (ok) { await checkOneMod(m, mcv()); log(`Matched: ${m.name}`,'ok'); }
+  else { m.status='unknown'; log(`Not found: ${slug}`,'e'); }
+  stats(); render();
+}
+
+function showExport() {
+  const box = document.getElementById('exportBox');
+  box.style.display = box.style.display==='none'?'block':'none';
+  if (box.style.display==='none') return;
+  const upd = mods.filter(m=>m.latestUrl && m.currentVer!==m.latestVer);
+  document.getElementById('exportList').innerHTML = upd.length
+    ? upd.map(m=>`<div class="export-row"><span class="export-name">${m.name}</span><span class="export-ver">${m.currentVer||'?'} → ${m.latestVer}</span><a href="${m.latestUrl}" target="_blank" style="font-size:11px;color:#185FA5;text-decoration:none;flex-shrink:0"><i class="ti ti-download"></i> .jar</a></div>`).join('')
+    : '<div style="padding:10px;font-size:12px;color:var(--color-text-secondary)">No updates pending.</div>';
+}
+
+function openAll() { mods.filter(m=>m.found&&m.currentVer!==m.latestVer).forEach(m=>window.open(`https://modrinth.com/mod/${m.slug}/versions`,'_blank')); }
+function copyLinks() { navigator.clipboard.writeText(mods.filter(m=>m.latestUrl&&m.currentVer!==m.latestVer).map(m=>`${m.name} (${m.latestVer}): ${m.latestUrl}`).join('\n')).then(()=>log('Copied','ok')); }
+
+function exportTxt() {
+  const upd=mods.filter(m=>m.latestUrl&&m.currentVer!==m.latestVer), ok=mods.filter(m=>m.status==='ok'), unk=mods.filter(m=>!m.found);
+  const lines=[`Fabric Mod Manager — Update Report`,`Minecraft: ${mcv()}  |  Fabric Loader: ${ldr()}`,`Generated: ${new Date().toLocaleString()}`,``,`=== UPDATES (${upd.length}) ===`,...upd.map(m=>`  ${m.name}\n    Old: ${m.currentVer}\n    New: ${m.latestVer}\n    URL: ${m.latestUrl||'https://modrinth.com/mod/'+m.slug}`),``,`=== UP TO DATE (${ok.length}) ===`,...ok.map(m=>`  ${m.name}  ${m.latestVer||''}`),``,`=== UNKNOWN (${unk.length}) ===`,...unk.map(m=>`  ${m.filename}`)];
+  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/plain'})),download:`mods-report-${mcv()}.txt`});
+  a.click(); log('Exported .txt','ok');
+}
+
+async function exportMrpack() {
+  const btn=document.getElementById('mrBtn');
+  btn.innerHTML='<span class="spin"></span> Building…'; btn.disabled=true;
+  const found=mods.filter(m=>m.found&&m.id);
+  const files=(await Promise.all(found.map(async m=>{
+    const vs=await getVersions(m.id,mcv()); if(!vs?.length) return null;
+    const f=vs[0].files?.find(x=>x.primary)||vs[0].files?.[0]; if(!f) return null;
+    return{path:`mods/${f.filename}`,hashes:f.hashes||{},env:{client:'required',server:'required'},downloads:[f.url],fileSize:f.size||0};
+  }))).filter(Boolean);
+  const idx={formatVersion:1,game:'minecraft',versionId:`pack-${mcv()}-${Date.now()}`,name:`Fabric Modpack ${mcv()}`,summary:`MC ${mcv()} + Fabric ${ldr()} — Fabric Mod Manager`,files,dependencies:{minecraft:mcv(),'fabric-loader':ldr()}};
+  const zip=new JSZip(); zip.file('modrinth.index.json',JSON.stringify(idx,null,2)); zip.folder('overrides');
+  const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE'});
+  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(blob),download:`fabric-modpack-${mcv()}.mrpack`});
+  a.click(); URL.revokeObjectURL(a.href);
+  log(`.mrpack — ${files.length} mods`,'ok');
+  btn.innerHTML='<i class="ti ti-file-zip"></i> .mrpack'; btn.disabled=false;
+}
+
+function upgradeHint() {
+  const t=document.getElementById('upg').value.trim();
+  document.getElementById('upgradeNotice').style.display=t?'flex':'none';
+  if(t) document.getElementById('upgradeTarget').textContent=t;
+}
+
+function removeMod(i) { mods.splice(i,1); stats(); render(); }
+function clearAll() { mods=[]; stats(); render(); document.getElementById('exportBox').style.display='none'; ['fixBtn','expBtn','mrBtn'].forEach(id=>document.getElementById(id).style.display='none'); }
+function setTab(t,el) { tab=t; document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on')); el.classList.add('on'); render(); }
+
+function stats() {
+  const ch=mods.filter(m=>!['unchecked','checking'].includes(m.status));
+  document.getElementById('sT').textContent=mods.length;
+  document.getElementById('sI').textContent=ch.length?mods.filter(m=>m.found).length:'—';
+  document.getElementById('sO').textContent=ch.length?mods.filter(m=>m.status==='ok').length:'—';
+  document.getElementById('sU').textContent=ch.length?mods.filter(m=>m.issues.some(i=>i.msg?.startsWith('Update'))).length:'—';
+  document.getElementById('sE').textContent=ch.length?mods.filter(m=>m.status==='err'||m.status==='unknown').length:'—';
+}
+
+function render() {
+  let list=mods;
+  if(tab==='updates') list=mods.filter(m=>m.issues.some(i=>i.msg?.startsWith('Update')));
+  else if(tab==='issues') list=mods.filter(m=>m.status==='err');
+  else if(tab==='unknown') list=mods.filter(m=>m.status==='unknown');
+  const el=document.getElementById('list');
+  const empty={all:'Drop your mods folder above to get started',updates:'No updates — run Check all first',issues:'No errors',unknown:'All mods identified'};
+  if(!list.length){el.innerHTML=`<div class="empty"><i class="ti ti-check" style="font-size:26px;display:block;margin-bottom:6px"></i>${empty[tab]}</div>`;return;}
+  el.innerHTML=list.map(m=>{
+    const gi=mods.indexOf(m);
+    const cls=m.status==='ok'?'ok':m.status==='w'?'w':m.status==='err'?'e':m.status==='unknown'?'unk':'';
+    const ico=m.icon?`<img src="${m.icon}" class="icon" onerror="this.outerHTML='<div class=icon-ph><i class=ti.ti-puzzle></i></div>'">`:`<div class="icon-ph"><i class="ti ti-puzzle"></i></div>`;
+    let badge='';
+    if(m.status==='unchecked') badge='<span class="badge bg-g">Unchecked</span>';
+    else if(m.status==='checking') badge='<span class="badge bg-b"><span class="spin"></span> Checking</span>';
+    else if(m.status==='ok') badge='<span class="badge bg-ok"><i class="ti ti-check"></i> Up to date</span>';
+    else if(m.status==='unknown') badge='<span class="badge bg-e">Unknown</span>';
+    else if(m.issues.some(i=>i.msg?.startsWith('Update'))) badge='<span class="badge bg-w"><i class="ti ti-arrow-up"></i> Update</span>';
+    else if(m.status==='err') badge='<span class="badge bg-e"><i class="ti ti-alert-circle"></i> Error</span>';
+    const cur=m.currentVer?`<span class="vc">${m.currentVer}</span>`:'';
+    const hasUpd=m.latestVer&&m.currentVer&&m.latestVer!==m.currentVer;
+    const newv=hasUpd?`<i class="ti ti-arrow-right arr"></i><span class="vc new">${m.latestVer}</span>`:'';
+    const fn=`<span style="font-size:10px;color:var(--color-text-secondary);font-family:var(--font-mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:170px">${m.filename}</span>`;
+    const depBadge=m.isAutoDep?'<span class="badge bg-p">auto-dep</span>':'';
+    const dlBtn=hasUpd&&m.latestUrl?`<a href="${m.latestUrl}" target="_blank" class="btn-b" style="height:24px;padding:0 7px;font-size:10px;display:inline-flex;align-items:center;gap:3px;text-decoration:none;border:0.5px solid #B5D4F4;border-radius:8px;color:#0C447C;background:#E6F1FB"><i class="ti ti-download"></i> .jar</a>`:'';
+    const delBtn=`<button onclick="removeMod(${gi})" style="height:24px;padding:0 6px;font-size:11px;color:#791F1F;background:#FCEBEB;border-color:#F7C1C1"><i class="ti ti-trash"></i></button>`;
+    const issueHtml=m.issues.length?`<div class="issues">${m.issues.map(i=>`<div class="issue"><i class="ti ti-${i.t==='e'?'alert-circle':'alert-triangle'}" style="color:${i.t==='e'?'#A32D2D':'#BA7517'};font-size:12px;flex-shrink:0;margin-top:1px"></i><span>${i.msg}</span></div>`).join('')}</div>`:'';
+    const overrideHtml=m.status==='unknown'?`<div class="override-row"><input id="ov${gi}" placeholder="Modrinth slug (e.g. better-block-entities)" onkeydown="if(event.key==='Enter')manualOverride(${gi},this.value)"><button class="btn-b" style="height:26px;padding:0 8px;font-size:11px" onclick="manualOverride(${gi},document.getElementById('ov${gi}').value)"><i class="ti ti-search"></i> Find</button></div>`:'';
+    return`<div class="card ${cls}"><div class="card-row">${ico}<div class="info"><div class="name">${m.name}</div><div class="desc">${m.desc||m.filename}</div><div class="meta">${badge}${cur}${newv}${depBadge}${fn}</div></div><div class="actions">${dlBtn}${delBtn}</div></div>${issueHtml}${overrideHtml}</div>`;
+  }).join('');
+}
+
+stats(); render();
+</script>
+</body>
+</html>
