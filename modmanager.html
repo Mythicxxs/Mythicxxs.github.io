@@ -272,6 +272,26 @@ async function apiFetch(url) {
   return r.json();
 }
 
+// Retries on 429 (rate limit) and 5xx with exponential backoff.
+// Without this, a rate-limited request silently throws and the mod gets
+// counted as "not found" even though it exists — this was a major source
+// of false negatives.
+async function apiFetchRetry(url, opts, maxRetries=3) {
+  for (let attempt=0; attempt<=maxRetries; attempt++) {
+    const r = await fetch(url, opts);
+    if (r.ok) return r.json();
+    if ((r.status===429 || r.status>=500) && attempt<maxRetries) {
+      const wait = r.status===429
+        ? parseInt(r.headers.get('Retry-After')||'1',10)*1000 + attempt*300
+        : 400*(attempt+1);
+      await new Promise(res=>setTimeout(res,wait));
+      continue;
+    }
+    throw new Error(`HTTP ${r.status}`);
+  }
+  throw new Error('Max retries exceeded');
+}
+
 // ─── Loader lookup (map only — Fabric Meta API always returns latest loader
 //     regardless of MC version, so we use known correct values instead) ───────
 function bestLoader(mc) {
@@ -320,7 +340,7 @@ function handleFiles(files) {
     if (ex.has(f.name)) continue;
     mods.push({
       filename: f.name,
-      // display name = filename stripped of extension (will be replaced after ID)
+      fileRef: f, // keep File object for SHA1 hashing
       name: f.name.replace(/\.jar(\.disabled)?$/i,''),
       desc:'', icon:null, id:null, slug:null,
       found:false, status:'unchecked', issues:[],
@@ -331,6 +351,61 @@ function handleFiles(files) {
   }
   log(`Added ${added} mod(s)`, 'ok');
   stats(); render();
+}
+
+// ─── SHA1 hashing (exact-match identification, no guessing) ───────
+async function sha1Hex(file) {
+  const buf = await file.arrayBuffer();
+  const digest = await crypto.subtle.digest('SHA-1', buf);
+  return [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+// Batch-identify every mod that still has its File object, in ONE API call.
+// This is exact — Modrinth's own hash of the exact bytes you have — so it
+// can never mismatch, and it costs 1-2 requests total instead of dozens.
+async function batchIdentifyByHash(modList) {
+  const withFiles = modList.filter(m => m.fileRef && !m.found);
+  if (!withFiles.length) return;
+  log(`Hashing ${withFiles.length} file(s) for exact lookup…`);
+  const hashMap = {}; // hash -> mod
+  for (const m of withFiles) {
+    try {
+      const h = await sha1Hex(m.fileRef);
+      hashMap[h] = m;
+    } catch(e) { /* hashing failed, will fall back later */ }
+  }
+  const hashes = Object.keys(hashMap);
+  if (!hashes.length) return;
+
+  let result = {};
+  try {
+    result = await apiFetchRetry(`${API}/version_files`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ hashes, algorithm:'sha1' })
+    });
+  } catch(e) { log(`Hash batch lookup failed: ${e.message}`,'w'); return; }
+
+  const projectIds = [...new Set(Object.values(result).map(v => v.project_id))];
+  if (!projectIds.length) { log('No exact hash matches — falling back to name search','w'); return; }
+
+  let projects = [];
+  try {
+    projects = await apiFetchRetry(`${API}/projects?ids=${encodeURIComponent(JSON.stringify(projectIds))}`);
+  } catch(e) { return; }
+  const projById = Object.fromEntries(projects.map(p => [p.id, p]));
+
+  let matched = 0;
+  for (const [hash, version] of Object.entries(result)) {
+    const m = hashMap[hash];
+    const proj = projById[version.project_id];
+    if (!m || !proj) continue;
+    m.id = proj.id; m.slug = proj.slug; m.name = proj.title;
+    m.desc = proj.description||''; m.icon = proj.icon_url||null; m.found = true;
+    m.currentVer = version.version_number; // exact — this IS the installed version
+    matched++;
+  }
+  log(`Exact hash match: ${matched}/${withFiles.length} identified instantly`, 'ok');
 }
 
 // ─── Core: identify by filename matching ─────────────────────────
@@ -368,13 +443,13 @@ async function projectHasFile(projectId, filename, mc) {
   // First try MC-specific
   for (const v of mcVariants(mc)) {
     try {
-      const vers = await apiFetch(`${API}/project/${encodeURIComponent(projectId)}/version?loaders=%5B%22fabric%22%5D&game_versions=%5B%22${encodeURIComponent(v)}%22%5D`);
+      const vers = await apiFetchRetry(`${API}/project/${encodeURIComponent(projectId)}/version?loaders=%5B%22fabric%22%5D&game_versions=%5B%22${encodeURIComponent(v)}%22%5D`);
       if (vers?.some(ver => versionHasFile(ver, filename))) return true;
     } catch(e) {}
   }
   // Then try all versions
   try {
-    const all = await apiFetch(`${API}/project/${encodeURIComponent(projectId)}/version?loaders=%5B%22fabric%22%5D`);
+    const all = await apiFetchRetry(`${API}/project/${encodeURIComponent(projectId)}/version?loaders=%5B%22fabric%22%5D`);
     return all?.some(ver => versionHasFile(ver, filename)) ?? false;
   } catch(e) { return false; }
 }
@@ -391,7 +466,7 @@ async function identifyByFilename(m) {
   // Search Modrinth
   let hits = [];
   try {
-    const res = await apiFetch(`${API}/search?query=${encodeURIComponent(query)}&facets=%5B%5B%22project_type%3Amod%22%5D%5D&limit=10`);
+    const res = await apiFetchRetry(`${API}/search?query=${encodeURIComponent(query)}&facets=%5B%5B%22project_type%3Amod%22%5D%5D&limit=6`);
     hits = res.hits || [];
   } catch(e) { return false; }
 
@@ -400,12 +475,13 @@ async function identifyByFilename(m) {
     const match = await projectHasFile(hit.project_id, filename, $mcv());
     if (match) {
       try {
-        const proj = await apiFetch(`${API}/project/${hit.project_id}`);
+        const proj = await apiFetchRetry(`${API}/project/${hit.project_id}`);
         m.id = proj.id; m.slug = proj.slug; m.name = proj.title;
         m.desc = proj.description||''; m.icon = proj.icon_url||null; m.found = true;
         return true;
       } catch(e) {}
     }
+    await new Promise(r=>setTimeout(r,60)); // stagger to avoid burst rate-limit
   }
 
   // Wider search — try slug directly derived from filename
@@ -414,7 +490,7 @@ async function identifyByFilename(m) {
     const slugVariants = [slugAttempt, slugAttempt.replace(/-/g,'')];
     for (const sv of slugVariants) {
       try {
-        const proj = await apiFetch(`${API}/project/${encodeURIComponent(sv)}`);
+        const proj = await apiFetchRetry(`${API}/project/${encodeURIComponent(sv)}`);
         if (proj?.id) {
           const match = await projectHasFile(proj.id, filename, $mcv());
           if (match) {
@@ -434,13 +510,13 @@ async function identifyByFilename(m) {
 async function getVersionsFabric(projectId, mc) {
   for (const v of mcVariants(mc)) {
     try {
-      const res = await apiFetch(`${API}/project/${encodeURIComponent(projectId)}/version?loaders=%5B%22fabric%22%5D&game_versions=%5B%22${encodeURIComponent(v)}%22%5D`);
+      const res = await apiFetchRetry(`${API}/project/${encodeURIComponent(projectId)}/version?loaders=%5B%22fabric%22%5D&game_versions=%5B%22${encodeURIComponent(v)}%22%5D`);
       if (res?.length) return res;
     } catch(e) {}
   }
   // Fallback: all fabric versions, filter client-side
   try {
-    const all = await apiFetch(`${API}/project/${encodeURIComponent(projectId)}/version?loaders=%5B%22fabric%22%5D`);
+    const all = await apiFetchRetry(`${API}/project/${encodeURIComponent(projectId)}/version?loaders=%5B%22fabric%22%5D`);
     const variants = new Set(mcVariants(mc));
     const filtered = (all||[]).filter(v => v.game_versions?.some(g => variants.has(g)));
     return filtered.length ? filtered : (all||[]);
@@ -527,9 +603,15 @@ async function checkAll() {
   }
   render();
 
+  // Pass 1: exact SHA1 hash lookup (fast, 100% accurate, no rate-limit risk —
+  // one batched request instead of per-mod searches). Anything not matched
+  // here falls through to the filename-search fallback in checkOne().
+  try { await batchIdentifyByHash(mods); } catch(e) { log(`Hash pass skipped: ${e.message}`,'w'); }
+  render();
+
   let done=0;
   const queue=[...mods];
-  const CONC=4; // keep at 4 to avoid rate-limit with file-checking calls
+  const CONC=3; // conservative to avoid 429s on the fallback name-search path
 
   async function worker() {
     while (queue.length) {
@@ -576,7 +658,7 @@ async function showDepDialog() {
   const rows=[];
   for (const dep of pendingDeps) {
     try {
-      const p=await apiFetch(`${API}/project/${dep.id}`);
+      const p=await apiFetchRetry(`${API}/project/${dep.id}`);
       rows.push({id:dep.id,name:p.title,slug:p.slug,icon:p.icon_url,for:dep.for,proj:p});
     } catch(e) { rows.push({id:dep.id,name:dep.id,slug:dep.id,icon:null,for:dep.for,proj:null}); }
   }
@@ -619,7 +701,7 @@ async function manualOverride(idx, slug) {
   const m=mods[idx];
   log(`Manual lookup: ${slug}`);
   try {
-    const proj=await apiFetch(`${API}/project/${encodeURIComponent(slug)}`);
+    const proj=await apiFetchRetry(`${API}/project/${encodeURIComponent(slug)}`);
     m.id=proj.id; m.slug=proj.slug; m.name=proj.title;
     m.desc=proj.description||''; m.icon=proj.icon_url||null; m.found=true;
     await checkOne(m,$mcv());
