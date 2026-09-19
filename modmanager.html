@@ -458,6 +458,70 @@ function mcVariants(mc) {
   return MC_ALIAS[mc] || [mc];
 }
 
+// ─── Real Fabric Loader compatibility check ───────────────────────
+// The API's loaders=fabric filter only tells you a mod HAS a fabric build —
+// it says nothing about which loader version range that build needs.
+// That's declared inside the jar itself (fabric.mod.json → depends.fabricloader).
+// Since we already have the raw file bytes for hashing, we read it directly —
+// no guessing, no relying on Modrinth's incomplete dependency metadata.
+
+function cmpVer(a, b) {
+  const pa = a.split(/[.+-]/).map(n => parseInt(n,10) || 0);
+  const pb = b.split(/[.+-]/).map(n => parseInt(n,10) || 0);
+  for (let i=0; i<Math.max(pa.length,pb.length); i++) {
+    const x=pa[i]||0, y=pb[i]||0;
+    if (x!==y) return x<y ? -1 : 1;
+  }
+  return 0;
+}
+
+function satisfiesSingle(ver, constraint) {
+  constraint = constraint.trim();
+  if (!constraint || constraint==='*') return true;
+  const m = constraint.match(/^(>=|<=|>|<|=|\^|~)?\s*([\d.]+)$/);
+  if (!m) return true; // unparseable — don't block on it
+  const [, op='=', target] = m;
+  const c = cmpVer(ver, target);
+  switch(op) {
+    case '>=': return c>=0;
+    case '<=': return c<=0;
+    case '>':  return c>0;
+    case '<':  return c<0;
+    case '=':  return c===0;
+    case '^': { // caret on 0.x.x → locked to same minor (Fabric convention)
+      const [maj,min] = target.split('.').map(Number);
+      const [vmaj,vmin] = ver.split('.').map(Number);
+      if (maj===0) return vmaj===0 && vmin===min ? cmpVer(ver,target)>=0 : (vmaj===0 && vmin>min);
+      return vmaj===maj && cmpVer(ver,target)>=0;
+    }
+    case '~': return cmpVer(ver,target)>=0; // treat as lower bound
+    default: return true;
+  }
+}
+
+function satisfiesRange(loaderVer, constraint) {
+  if (!constraint) return true;
+  const orGroups = Array.isArray(constraint) ? constraint : [constraint];
+  return orGroups.some(group =>
+    String(group).split(/\s+/).filter(Boolean).every(single => satisfiesSingle(loaderVer, single))
+  );
+}
+
+async function checkLoaderCompat(m, loaderVer) {
+  if (!m.fileRef) return; // only possible for locally-loaded jars, not remote deps
+  try {
+    const zip = await JSZip.loadAsync(m.fileRef);
+    const entry = zip.file('fabric.mod.json');
+    if (!entry) return; // not a fabric mod jar (or quilt-only) — nothing to check
+    const json = JSON.parse(await entry.async('string'));
+    const req = json.depends?.fabricloader ?? json.depends?.['fabricloader'];
+    if (!req) return; // mod doesn't declare a loader requirement
+    if (!satisfiesRange(loaderVer, req)) {
+      m.issues.push({ t:'w', msg:`Declares Fabric Loader "${Array.isArray(req)?req.join(' || '):req}" — you have ${loaderVer} set` });
+    }
+  } catch(e) { /* corrupt/unreadable jar — skip silently, not a real issue */ }
+}
+
 async function identifyByFilename(m) {
   const filename = m.filename.replace(/\.disabled$/i,''); // strip .disabled
   const query = fileToQuery(filename);
@@ -562,6 +626,9 @@ async function checkOne(m, mc) {
 
   if (m.currentVer !== latest.version_number)
     m.issues.push({t:'w', msg:`Update: ${m.currentVer} → ${latest.version_number}`});
+
+  // Real loader-version check against the actual jar's declared requirement
+  await checkLoaderCompat(m, $ldr());
 
   // Collect missing deps (don't auto-add — just record)
   for (const dep of (latest.dependencies||[])) {
