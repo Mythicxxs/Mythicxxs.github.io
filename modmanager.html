@@ -522,6 +522,48 @@ async function checkLoaderCompat(m, loaderVer) {
   } catch(e) { /* corrupt/unreadable jar — skip silently, not a real issue */ }
 }
 
+// Read depends.fabricloader out of a REMOTE jar's fabric.mod.json, given its
+// download URL. Modrinth's version API has no field for "loader version
+// range" — that's only inside the jar itself — so the only way to know if a
+// candidate "latest" version actually works with your loader is to download
+// it and look. Cached so we never re-download the same file twice.
+const _loaderReqCache = new Map();
+async function getRemoteLoaderReq(fileUrl) {
+  if (_loaderReqCache.has(fileUrl)) return _loaderReqCache.get(fileUrl);
+  let req = undefined; // undefined = couldn't determine, treat as "unknown, assume ok"
+  try {
+    const r = await fetch(fileUrl);
+    if (r.ok) {
+      const buf = await r.arrayBuffer();
+      const zip = await JSZip.loadAsync(buf);
+      const entry = zip.file('fabric.mod.json');
+      if (entry) {
+        const json = JSON.parse(await entry.async('string'));
+        req = json.depends?.fabricloader ?? null;
+      }
+    }
+  } catch(e) { /* CORS-blocked or network error — can't verify, assume ok */ }
+  _loaderReqCache.set(fileUrl, req);
+  return req;
+}
+
+// Walk a project's versions (already sorted newest-first by Modrinth) and
+// return the newest one whose jar actually declares compatibility with the
+// given loader version. Falls back to the newest version if none can be
+// verified (e.g. all downloads blocked), but flags that in the issue list.
+async function resolveLoaderCompatibleVersion(versions, loaderVer, maxCheck=5) {
+  const checkable = versions.slice(0, maxCheck);
+  for (const v of checkable) {
+    const file = v.files?.find(f=>f.primary) || v.files?.[0];
+    if (!file?.url) continue;
+    const req = await getRemoteLoaderReq(file.url);
+    if (req === undefined || req === null) return { version:v, verified:false }; // couldn't read — don't block on it
+    if (satisfiesRange(loaderVer, req)) return { version:v, verified:true, req };
+  }
+  // Nothing in the checked window was verifiably compatible — use newest anyway
+  return { version:versions[0], verified:false, allChecked:true };
+}
+
 async function identifyByFilename(m) {
   const filename = m.filename.replace(/\.disabled$/i,''); // strip .disabled
   const query = fileToQuery(filename);
@@ -610,11 +652,16 @@ async function checkOne(m, mc) {
     m.status='err'; return;
   }
 
-  const latest = versions[0];
+  const ldrVer = $ldr();
+  const { version: latest, verified, allChecked } = await resolveLoaderCompatibleVersion(versions, ldrVer);
   const file = latest.files?.find(f=>f.primary) || latest.files?.[0];
   m.latestVer = latest.version_number;
   m.latestUrl = file?.url || null;
   m.latestFile = file?.filename || null;
+
+  if (allChecked) {
+    m.issues.push({ t:'w', msg:`No recent version verifiably declares loader ${ldrVer} compatible — showing newest for MC ${mc} anyway, verify manually` });
+  }
 
   // Try to infer currentVer from our filename
   if (!m.currentVer) {
@@ -627,8 +674,8 @@ async function checkOne(m, mc) {
   if (m.currentVer !== latest.version_number)
     m.issues.push({t:'w', msg:`Update: ${m.currentVer} → ${latest.version_number}`});
 
-  // Real loader-version check against the actual jar's declared requirement
-  await checkLoaderCompat(m, $ldr());
+  // Also check the LOCAL installed jar's own declared requirement (cheap, no download)
+  await checkLoaderCompat(m, ldrVer);
 
   // Collect missing deps (don't auto-add — just record)
   for (const dep of (latest.dependencies||[])) {
